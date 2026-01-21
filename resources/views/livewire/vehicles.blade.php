@@ -8,9 +8,24 @@
         'Hors service' => 'bg-rose-100 text-rose-700 border border-rose-200',
         'Réformé' => 'bg-gray-800 text-gray-100 border border-gray-700',
     ];
+
+        $roleBadges = [
+        'admin' => 'bg-rose-500 text-white',
+        'responsable_parc' => 'bg-indigo-500 text-white',
+        'valideur' => 'bg-amber-500 text-white',
+        'agent_saisie' => 'bg-emerald-500 text-white',
+        'consultation' => 'bg-gray-500 text-white',
+    ];
 ?>
 
 <div class="space-y-4 text-gray-100">
+    {{-- Badge du rôle en haut à droite --}}
+    <div class="flex justify-end">
+        <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full {{ $roleBadges[auth()->user()->role] ?? 'bg-gray-500 text-white' }}">
+            {{ auth()->user()->role_label }}
+        </span>
+    </div>
+
     @if (session()->has('status'))
         <div class="rounded-md bg-emerald-900/40 border border-emerald-700 text-emerald-100 px-4 py-3">
             {{ session('status') }}
@@ -62,6 +77,7 @@
                     </select>
                 </div>
             </div>
+            @if(auth()->user()->canEdit())
             <button
                 type="button"
                 wire:click="openCreate"
@@ -69,14 +85,15 @@
             >
                 Ajouter un véhicule
             </button>
+            @endif
         </div>
 
         <div class="flex-1 space-y-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-400">Module CRUD complet</p>
                     <h3 class="text-lg font-semibold text-gray-100">Gestion du parc</h3>
                 </div>
+                @if(auth()->user()->canEdit())
                 <div class="hidden lg:block">
                     <button
                         type="button"
@@ -86,6 +103,7 @@
                         + Ajouter un véhicule
                     </button>
                 </div>
+                @endif
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -123,6 +141,7 @@
                             {{ $vehicle->categorie_vehicule ?: 'Catégorie ?' }} • {{ $vehicle->carburant ?: 'Carburant ?' }}
                         </div>
 
+                        @if(auth()->user()->canEdit())
                         <div class="mt-4 flex items-center justify-end gap-2">
                             <button
                                 type="button"
@@ -140,6 +159,7 @@
                                 Supprimer
                             </button>
                         </div>
+                        @endif
                     </div>
                 @empty
                     <div class="col-span-full bg-gray-900 border border-dashed border-gray-800 rounded-lg p-8 text-center text-gray-300">

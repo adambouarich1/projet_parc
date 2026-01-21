@@ -8,12 +8,23 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect()->route('vehicles.index'))->middleware(['auth', 'verified']);
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('vehicles', VehicleController::class)->except(['create', 'edit', 'show']);
-    Route::resource('drivers', DriverController::class)->except(['create', 'edit', 'show']);
+    
+    // Lecture : accessible à tous les connectés
+    Route::get('vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+    Route::get('drivers', [DriverController::class, 'index'])->name('drivers.index');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    // Modification : interdit aux utilisateurs "consultation"
+    Route::middleware(['role:admin,responsable_parc,valideur,agent_saisie'])->group(function () {
+        Route::post('vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
+        Route::put('vehicles/{vehicle}', [VehicleController::class, 'update'])->name('vehicles.update');
+        Route::delete('vehicles/{vehicle}', [VehicleController::class, 'destroy'])->name('vehicles.destroy');
+
+        Route::post('drivers', [DriverController::class, 'store'])->name('drivers.store');
+        Route::put('drivers/{driver}', [DriverController::class, 'update'])->name('drivers.update');
+        Route::delete('drivers/{driver}', [DriverController::class, 'destroy'])->name('drivers.destroy');
+    });
+
+    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
 });
 
 Route::middleware('auth')->group(function () {
