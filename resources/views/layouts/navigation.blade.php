@@ -15,6 +15,9 @@
                     <x-nav-link :href="route('drivers.index')" :active="request()->routeIs('drivers.*')">
                         {{ __('Conducteurs') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('missions.index')" :active="request()->routeIs('missions.index')">
+                         {{ __('Ordres de Mission') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -75,6 +78,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('drivers.index')" :active="request()->routeIs('drivers.*')">
                 {{ __('Conducteurs') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('missions.index')" :active="request()->routeIs('missions.index')">
+                 {{ __('Ordres de Mission') }}
             </x-responsive-nav-link>
         </div>
 

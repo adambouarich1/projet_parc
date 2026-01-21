@@ -36,4 +36,9 @@ class Driver extends Model
         'date_delivrance' => 'date',
         'date_expiration' => 'date',
     ];
+// Relations avec les ordres de mission
+public function missionOrders()
+{
+    return $this->hasMany(\App\Models\MissionOrder::class);
+}
 }

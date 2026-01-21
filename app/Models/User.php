@@ -78,4 +78,15 @@ class User extends Authenticatable
     {
         return self::ROLES[$this->role] ?? $this->role;
     }
+    // Ordres de mission créés par cet utilisateur
+public function missionOrders()
+{
+    return $this->hasMany(\App\Models\MissionOrder::class);
+}
+
+// Ordres de mission validés par cet utilisateur
+public function validatedMissionOrders()
+{
+    return $this->hasMany(\App\Models\MissionOrder::class, 'validated_by');
+}
 }

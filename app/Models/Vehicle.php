@@ -64,4 +64,9 @@ class Vehicle extends Model
         'prix_achat' => 'decimal:2',
         'valeur_nette_comptable' => 'decimal:2',
     ];
+
+public function missionOrders()
+{
+    return $this->hasMany(\App\Models\MissionOrder::class);
+}
 }
