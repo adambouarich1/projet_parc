@@ -69,4 +69,15 @@ public function missionOrders()
 {
     return $this->hasMany(\App\Models\MissionOrder::class);
 }
+
+public function fuelEntries()
+{
+    return $this->hasMany(\App\Models\FuelEntry::class);
+}
+
+public function interventions()
+{
+    return $this->hasMany(\App\Models\Intervention::class);
+}
+
 }

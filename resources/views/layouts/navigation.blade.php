@@ -18,6 +18,12 @@
                     <x-nav-link :href="route('missions.index')" :active="request()->routeIs('missions.index')">
                          {{ __('Ordres de Mission') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('fuel.index')" :active="request()->routeIs('fuel.index')">
+                        {{ __('Carburant') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('interventions.index')" :active="request()->routeIs('interventions.index')">
+                        {{ __('Interventions') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -81,7 +87,13 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('missions.index')" :active="request()->routeIs('missions.index')">
                  {{ __('Ordres de Mission') }}
+            </x-responsive-nav-link><x-responsive-nav-link :href="route('fuel.index')" :active="request()->routeIs('fuel.index')">
+                    {{ __('Carburant') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('interventions.index')" :active="request()->routeIs('interventions.index')">
+                    {{ __('Interventions') }}
+            </x-responsive-nav-link>
+
         </div>
 
         <!-- Responsive Settings Options -->
