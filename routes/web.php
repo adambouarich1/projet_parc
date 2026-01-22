@@ -6,6 +6,7 @@ use App\Http\Controllers\VehicleController;
 use App\Livewire\MissionOrders;
 use App\Livewire\FuelEntries;
 use App\Livewire\Interventions;
+use App\Livewire\Alerts;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('vehicles.index'))->middleware(['auth', 'verified']);
@@ -18,6 +19,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('missions', MissionOrders::class)->name('missions.index');
     Route::get('carburant', FuelEntries::class)->name('fuel.index');
     Route::get('interventions', Interventions::class)->name('interventions.index');
+    Route::get('alertes', Alerts::class)->name('alerts.index');
+
 
     // Modification : interdit aux utilisateurs "consultation"
     Route::middleware(['role:admin,responsable_parc,valideur,agent_saisie'])->group(function () {

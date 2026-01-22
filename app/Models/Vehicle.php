@@ -80,4 +80,9 @@ public function interventions()
     return $this->hasMany(\App\Models\Intervention::class);
 }
 
+public function alerts()
+{
+    return $this->morphMany(\App\Models\Alert::class, 'alertable');
+}
+
 }

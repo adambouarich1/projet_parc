@@ -41,4 +41,10 @@ public function missionOrders()
 {
     return $this->hasMany(\App\Models\MissionOrder::class);
 }
+
+public function alerts()
+{
+    return $this->morphMany(\App\Models\Alert::class, 'alertable');
+}
+
 }

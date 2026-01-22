@@ -24,6 +24,9 @@
                     <x-nav-link :href="route('interventions.index')" :active="request()->routeIs('interventions.index')">
                         {{ __('Interventions') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('alerts.index')" :active="request()->routeIs('alerts.index')">
+                        {{ __('Alertes') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -92,6 +95,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('interventions.index')" :active="request()->routeIs('interventions.index')">
                     {{ __('Interventions') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('alerts.index')" :active="request()->routeIs('alerts.index')">
+                    {{ __('Alertes') }}
             </x-responsive-nav-link>
 
         </div>
