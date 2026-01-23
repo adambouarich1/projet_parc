@@ -17,6 +17,8 @@ class MissionOrder extends Model
     public const STATUT_EN_COURS = 'en_cours';
     public const STATUT_CLOTURE = 'cloture';
     public const STATUT_ANNULE = 'annule';
+    public const STATUT_ARCHIVE = 'archive';
+   
 
     public const STATUTS = [
         self::STATUT_BROUILLON => 'Brouillon',
@@ -26,6 +28,8 @@ class MissionOrder extends Model
         self::STATUT_EN_COURS => 'En cours',
         self::STATUT_CLOTURE => 'Clôturé',
         self::STATUT_ANNULE => 'Annulé',
+        self::STATUT_ARCHIVE => 'Archivé',
+        self::STATUT_ARCHIVE => 'Archivé',
     ];
 
     protected $fillable = [
@@ -123,4 +127,13 @@ class MissionOrder extends Model
         }
         return null;
     }
+    public function scopeNonArchive($query)
+{
+    return $query->where('statut', '!=', self::STATUT_ARCHIVE);
+}
+
+public function scopeArchive($query)
+{
+    return $query->where('statut', self::STATUT_ARCHIVE);
+}
 }

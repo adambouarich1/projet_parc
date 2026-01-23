@@ -8,6 +8,7 @@ use App\Livewire\FuelEntries;
 use App\Livewire\Interventions;
 use App\Livewire\Alerts;
 use App\Livewire\Insurances;
+use App\Livewire\Archives;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('vehicles.index'))->middleware(['auth', 'verified']);
@@ -22,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('interventions', Interventions::class)->name('interventions.index');
     Route::get('alertes', Alerts::class)->name('alerts.index');
     Route::get('assurances', Insurances::class)->name('insurances.index');
+    Route::get('archives', Archives::class)->name('archives.index');
 
 
     // Modification : interdit aux utilisateurs "consultation"

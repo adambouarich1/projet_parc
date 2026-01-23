@@ -25,12 +25,14 @@ class Intervention extends Model
     public const STATUT_EN_COURS = 'en_cours';
     public const STATUT_TERMINE = 'termine';
     public const STATUT_ANNULE = 'annule';
+    public const STATUT_ARCHIVE = 'archive';
 
     public const STATUTS = [
         self::STATUT_PLANIFIE => 'Planifié',
         self::STATUT_EN_COURS => 'En cours',
         self::STATUT_TERMINE => 'Terminé',
         self::STATUT_ANNULE => 'Annulé',
+        self::STATUT_ARCHIVE => 'Archivé',
     ];
 
     public const RESULTATS_CT = [
@@ -97,4 +99,14 @@ class Intervention extends Model
     {
         return $this->resultat_ct ? self::RESULTATS_CT[$this->resultat_ct] : null;
     }
+
+   public function scopeNonArchive($query)
+{
+    return $query->where('statut', '!=', self::STATUT_ARCHIVE);
+}
+
+public function scopeArchive($query)
+{
+    return $query->where('statut', self::STATUT_ARCHIVE);
+}
 }

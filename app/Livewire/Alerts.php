@@ -35,6 +35,7 @@ class Alerts extends Component
     {
         $alerts = Alert::query()
             ->with(['alertable', 'treatedBy'])
+            ->nonArchive()
             ->when($this->filters['type'], fn($q, $v) => $q->where('type', $v))
             ->when($this->filters['priorite'], fn($q, $v) => $q->where('priorite', $v))
             ->when($this->filters['statut'], fn($q, $v) => $q->where('statut', $v))

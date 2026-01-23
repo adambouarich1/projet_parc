@@ -37,6 +37,7 @@ class Interventions extends Component
     public function render(): View
     {
         $interventions = Intervention::query()
+            ->nonArchive()
             ->with(['vehicle', 'user'])
             ->when($this->filters['vehicle_id'], fn($q, $v) => $q->where('vehicle_id', $v))
             ->when($this->filters['type'], fn($q, $v) => $q->where('type', $v))
@@ -227,4 +228,10 @@ class Interventions extends Component
         $intervention->update(['statut' => $statut]);
         session()->flash('status', 'Statut mis à jour.');
     }
+    public function archive(int $id): void
+{
+    $intervention = Intervention::findOrFail($id);
+    $intervention->update(['statut' => Intervention::STATUT_ARCHIVE]);
+    session()->flash('status', 'Intervention archivée.');
+}
 }

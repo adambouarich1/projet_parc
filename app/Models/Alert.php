@@ -129,4 +129,13 @@ class Alert extends Model
     {
         return $query->whereIn('priorite', [self::PRIORITE_HAUTE, self::PRIORITE_CRITIQUE]);
     }
+public function scopeArchive($query)
+{
+    return $query->whereIn('statut', [self::STATUT_TRAITEE, self::STATUT_IGNOREE]);
+}
+
+public function scopeNonArchive($query)
+{
+    return $query->whereIn('statut', [self::STATUT_ACTIVE, self::STATUT_VUE]);
+}
 }

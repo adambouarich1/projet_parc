@@ -30,6 +30,9 @@
                     <x-nav-link :href="route('insurances.index')" :active="request()->routeIs('insurances.index')">
                         {{ __('Assurances') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('archives.index')" :active="request()->routeIs('archives.index')">
+                        {{ __('Archives') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -105,6 +108,9 @@
             <x-nav-link :href="route('insurances.index')" :active="request()->routeIs('insurances.index')">
                     {{ __('Assurances') }}
             </x-nav-link>
+            <x-responsive-nav-link :href="route('archives.index')" :active="request()->routeIs('archives.index')">
+                    {{ __('Archives') }}
+            </x-responsive-nav-link>
 
         </div>
 

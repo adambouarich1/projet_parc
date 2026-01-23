@@ -9,6 +9,18 @@ class FuelEntry extends Model
 {
     use HasFactory;
 
+    public const STATUT_EN_ATTENTE = 'en_attente';
+    public const STATUT_VALIDE = 'valide';
+    public const STATUT_REFUSE = 'refuse';
+    public const STATUT_ARCHIVE = 'archive';
+
+    public const STATUTS = [
+        self::STATUT_EN_ATTENTE => 'En attente',
+        self::STATUT_VALIDE => 'Validé',
+        self::STATUT_REFUSE => 'Refusé',
+        self::STATUT_ARCHIVE => 'Archivé',
+    ];
+
     protected $fillable = [
         'vehicle_id',
         'driver_id',
@@ -23,6 +35,7 @@ class FuelEntry extends Model
         'type_carburant',
         'numero_bon',
         'observations',
+        'statut',
     ];
 
     protected $casts = [
@@ -53,7 +66,13 @@ class FuelEntry extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Calcul consommation L/100km (par rapport au plein précédent)
+    // Accesseurs
+    public function getStatutLabelAttribute(): string
+    {
+        return self::STATUTS[$this->statut] ?? $this->statut;
+    }
+
+    // Calcul consommation L/100km
     public function getConsommationAttribute(): ?float
     {
         $previous = self::where('vehicle_id', $this->vehicle_id)
@@ -67,5 +86,19 @@ class FuelEntry extends Model
         }
 
         return null;
+    }
+
+    // Scopes
+    public function scopeNonArchive($query)
+    {
+        return $query->where(function($q) {
+            $q->where('statut', '!=', self::STATUT_ARCHIVE)
+              ->orWhereNull('statut');
+        });
+    }
+
+    public function scopeArchive($query)
+    {
+        return $query->where('statut', self::STATUT_ARCHIVE);
     }
 }

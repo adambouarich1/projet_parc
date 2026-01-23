@@ -39,6 +39,7 @@ class FuelEntries extends Component
     public function render(): View
     {
         $entries = FuelEntry::query()
+            ->nonArchive()
             ->with(['vehicle', 'driver', 'user', 'missionOrder'])
             ->when($this->filters['vehicle_id'], fn($q, $v) => $q->where('vehicle_id', $v))
             ->when($this->filters['date_from'], fn($q, $v) => $q->whereDate('date_plein', '>=', $v))
@@ -195,4 +196,10 @@ class FuelEntries extends Component
         FuelEntry::findOrFail($id)->delete();
         session()->flash('status', 'Entrée supprimée.');
     }
+    public function archive(int $id): void
+{
+    $entry = FuelEntry::findOrFail($id);
+    $entry->update(['statut' => FuelEntry::STATUT_ARCHIVE]);
+    session()->flash('status', 'Entrée carburant archivée.');
+}
 }

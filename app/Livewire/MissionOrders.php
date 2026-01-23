@@ -40,6 +40,7 @@ class MissionOrders extends Component
     public function render(): View
     {
         $missions = MissionOrder::query()
+            ->nonArchive()
             ->with(['user', 'vehicle', 'driver', 'validator'])
             ->when($this->filters['statut'], fn($q, $v) => $q->where('statut', $v))
             ->when($this->filters['search'], fn($q, $v) => $q->where(function($query) use ($v) {
@@ -303,4 +304,10 @@ class MissionOrders extends Component
         $mission->delete();
         session()->flash('status', 'Mission supprimée.');
     }
+    public function archive(int $id): void
+{
+    $mission = MissionOrder::findOrFail($id);
+    $mission->update(['statut' => MissionOrder::STATUT_ARCHIVE]);
+    session()->flash('status', 'Ordre de mission archivé.');
+}
 }
