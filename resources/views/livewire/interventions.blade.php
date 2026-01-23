@@ -11,7 +11,6 @@
         'entretien' => 'bg-blue-500 text-white',
         'reparation' => 'bg-orange-500 text-white',
         'controle_technique' => 'bg-purple-500 text-white',
-        'assurance' => 'bg-emerald-500 text-white',
         'autre' => 'bg-gray-500 text-white',
     ];
 

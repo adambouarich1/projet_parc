@@ -108,59 +108,103 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 @forelse ($vehicles as $vehicle)
-                    <div class="relative bg-gray-900 rounded-xl shadow border border-gray-800 p-4 flex flex-col" wire:key="vehicle-{{ $vehicle->id }}">
-                        <div class="flex items-start justify-between gap-2">
-                            <div>
-                                <p class="text-xs uppercase text-gray-400">Parc</p>
-                                <h4 class="text-lg font-semibold text-gray-100">{{ $vehicle->marque }} {{ $vehicle->modele }}</h4>
-                                <p class="text-sm text-gray-300">Immat: {{ $vehicle->immatriculation }}</p>
-                            </div>
-                            <button
-                                type="button"
-                                wire:click="openDetails({{ $vehicle->id }})"
-                                class="h-8 w-8 inline-flex items-center justify-center rounded-full border border-gray-700 text-gray-200 hover:bg-gray-800"
-                                title="Détails"
-                            >
-                                i
-                            </button>
-                        </div>
-
-                        <div class="mt-3 flex items-center justify-between">
-                            <div class="text-sm text-gray-200 font-medium">
-                                Statut:
-                                <span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full {{ $statusColors[$vehicle->statut_actuel] ?? 'bg-gray-800 text-gray-200 border border-gray-700' }}">
-                                    {{ $vehicle->statut_actuel }}
-                                </span>
-                            </div>
-                            <div class="text-sm text-gray-300">
-                                {{ number_format($vehicle->kilometrage_actuel, 0, ',', ' ') }} km
-                            </div>
-                        </div>
-
-                        <div class="mt-2 text-xs text-gray-400">
-                            {{ $vehicle->categorie_vehicule ?: 'Catégorie ?' }} • {{ $vehicle->carburant ?: 'Carburant ?' }}
-                        </div>
-
-                        @if(auth()->user()->canEdit())
-                        <div class="mt-4 flex items-center justify-end gap-2">
-                            <button
-                                type="button"
-                                wire:click="openEdit({{ $vehicle->id }})"
-                                class="px-3 py-1.5 text-xs font-semibold text-indigo-200 bg-indigo-900/40 rounded-md hover:bg-indigo-900/60"
-                            >
-                                Modifier
-                            </button>
-                            <button
-                                type="button"
-                                x-data
-                                x-on:click.prevent="if (confirm('Supprimer ce véhicule ?')) { $wire.deleteVehicle({{ $vehicle->id }}) }"
-                                class="px-3 py-1.5 text-xs font-semibold text-rose-200 bg-rose-900/40 rounded-md hover:bg-rose-900/60"
-                            >
-                                Supprimer
-                            </button>
-                        </div>
-                        @endif
+                    <div class="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg border border-gray-700/50 overflow-hidden hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300" wire:key="vehicle-{{ $vehicle->id }}">
+    {{-- Bande de statut en haut --}}
+    @php
+        $statusBands = [
+            'En service' => 'bg-emerald-500',
+            'En réparation' => 'bg-amber-500',
+            'Immobile' => 'bg-sky-500',
+            'Hors service' => 'bg-rose-500',
+            'Réformé' => 'bg-gray-600',
+        ];
+    @endphp
+    <div class="h-1 {{ $statusBands[$vehicle->statut_actuel] ?? 'bg-gray-600' }}"></div>
+    
+    <div class="p-5">
+        {{-- Header avec marque/modèle et bouton info --}}
+        <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl"></span>
+                    <div>
+                        <h4 class="text-lg font-bold text-white truncate">{{ $vehicle->marque }} {{ $vehicle->modele }}</h4>
+                        <p class="text-sm text-indigo-400 font-mono">{{ $vehicle->immatriculation }}</p>
                     </div>
+                </div>
+            </div>
+            <button
+                type="button"
+                wire:click="openDetails({{ $vehicle->id }})"
+                class="h-10 w-10 inline-flex items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 hover:text-indigo-300 transition-colors"
+                title="Détails"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Infos principales --}}
+        <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Kilométrage</p>
+                <p class="text-lg font-bold text-white">{{ number_format($vehicle->kilometrage_actuel, 0, ',', ' ') }} <span class="text-xs text-gray-400 font-normal">km</span></p>
+            </div>
+            <div class="bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Statut</p>
+                <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full {{ $statusColors[$vehicle->statut_actuel] ?? 'bg-gray-800 text-gray-200 border border-gray-700' }}">
+                    {{ $vehicle->statut_actuel }}
+                </span>
+            </div>
+        </div>
+
+        {{-- Tags catégorie/carburant --}}
+        <div class="mt-3 flex flex-wrap gap-2">
+            @if($vehicle->categorie_vehicule)
+                <span class="inline-flex items-center px-2 py-1 text-xs rounded-lg bg-gray-700/50 text-gray-300 border border-gray-600/50">
+                    📦 {{ $vehicle->categorie_vehicule }}
+                </span>
+            @endif
+            @if($vehicle->carburant)
+                <span class="inline-flex items-center px-2 py-1 text-xs rounded-lg bg-gray-700/50 text-gray-300 border border-gray-600/50">
+                    ⛽ {{ $vehicle->carburant }}
+                </span>
+            @endif
+        </div>
+
+        {{-- Assureur --}}
+        <div class="mt-3 flex items-center gap-2 p-2 rounded-lg {{ $vehicle->assureur_actuel ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-rose-500/10 border border-rose-500/30' }}">
+            <span class="text-sm">🛡️</span>
+            @if($vehicle->assureur_actuel)
+                <span class="text-sm text-emerald-400 font-medium">{{ $vehicle->assureur_actuel }}</span>
+            @else
+                <span class="text-sm text-rose-400 font-medium">Non assuré</span>
+            @endif
+        </div>
+
+        {{-- Actions --}}
+        @if(auth()->user()->canEdit())
+        <div class="mt-4 flex items-center justify-end gap-2 pt-3 border-t border-gray-700/50">
+            <button
+                type="button"
+                wire:click="openEdit({{ $vehicle->id }})"
+                class="px-4 py-2 text-xs font-semibold text-indigo-300 bg-indigo-500/20 rounded-lg hover:bg-indigo-500/30 transition-colors"
+            >
+                ✏️ Modifier
+            </button>
+            <button
+                type="button"
+                x-data
+                x-on:click.prevent="if (confirm('Supprimer ce véhicule ?')) { $wire.deleteVehicle({{ $vehicle->id }}) }"
+                class="px-4 py-2 text-xs font-semibold text-rose-300 bg-rose-500/20 rounded-lg hover:bg-rose-500/30 transition-colors"
+            >
+                🗑️ Supprimer
+            </button>
+        </div>
+        @endif
+    </div>
+</div>
                 @empty
                     <div class="col-span-full bg-gray-900 border border-dashed border-gray-800 rounded-lg p-8 text-center text-gray-300">
                         Aucun véhicule pour le moment. Cliquez sur « Ajouter un véhicule » pour démarrer.
@@ -476,6 +520,14 @@
                             <div><span class="text-gray-500 text-xs">Puissance fiscale</span><p class="font-semibold">{{ $detailVehicle->puissance_fiscale }}</p></div>
                             <div><span class="text-gray-500 text-xs">Catégorie fiscale</span><p class="font-semibold">{{ $detailVehicle->categorie_fiscale }}</p></div>
                         </div>
+                    </div>
+                                        <div>
+                        <span class="text-gray-500 text-xs">Assureur actuel</span>
+                        @if($detailVehicle->assureur_actuel)
+                            <p class="font-semibold text-emerald-400">{{ $detailVehicle->assureur_actuel }}</p>
+                        @else
+                            <p class="font-semibold text-rose-400">Aucune assurance active</p>
+                        @endif
                     </div>
 
                     <div class="bg-gray-800 rounded-lg p-4 border border-gray-700" x-show="tab === 'tech'" x-cloak>

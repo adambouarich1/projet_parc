@@ -85,4 +85,21 @@ public function alerts()
     return $this->morphMany(\App\Models\Alert::class, 'alertable');
 }
 
+public function insurances()
+{
+    return $this->hasMany(\App\Models\Insurance::class);
+}
+
+public function currentInsurance()
+{
+    return $this->hasOne(\App\Models\Insurance::class)
+        ->where('statut', 'active')
+        ->orderBy('date_expiration', 'desc');
+}
+
+public function getAssureurActuelAttribute(): ?string
+{
+    return $this->currentInsurance?->assureur;
+}
+
 }

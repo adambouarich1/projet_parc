@@ -7,6 +7,7 @@ use App\Models\Driver;
 use App\Models\Vehicle;
 use App\Models\Intervention;
 use Carbon\Carbon;
+use App\Models\Insurance;
 
 class AlertService
 {
@@ -15,16 +16,17 @@ class AlertService
     protected int $seuilCT = 30;
     protected int $seuilVidangeKm = 500;
 
-    public function generateAllAlerts(): array
+   public function generateAllAlerts(): array
     {
-        $stats = [
-            'drivers' => $this->checkDriversAlerts(),
-            'vehicles' => $this->checkVehiclesAlerts(),
-            'interventions' => $this->checkInterventionsAlerts(),
-        ];
+    $stats = [
+        'drivers' => $this->checkDriversAlerts(),
+        'vehicles' => $this->checkVehiclesAlerts(),
+        'interventions' => $this->checkInterventionsAlerts(),
+        'insurances' => $this->checkInsurancesAlerts(),
+    ];
 
-        return $stats;
-    }
+    return $stats;
+            }
 
     public function checkDriversAlerts(): int
     {
@@ -66,88 +68,52 @@ class AlertService
     }
 
     public function checkVehiclesAlerts(): int
-    {
-        $count = 0;
-        $today = Carbon::today();
+{
+    $count = 0;
+    $today = Carbon::today();
 
-        $vehicles = Vehicle::all();
+    $vehicles = Vehicle::all();
 
-        foreach ($vehicles as $vehicle) {
-            // Dernière assurance
-            $derniereAssurance = Intervention::where('vehicle_id', $vehicle->id)
-                ->where('type', 'assurance')
-                ->whereNotNull('date_expiration_assurance')
-                ->orderBy('date_expiration_assurance', 'desc')
-                ->first();
+    foreach ($vehicles as $vehicle) {
+        // Dernier CT (on garde uniquement cette partie)
+        $dernierCT = Intervention::where('vehicle_id', $vehicle->id)
+            ->where('type', 'controle_technique')
+            ->whereNotNull('date_expiration_ct')
+            ->orderBy('date_expiration_ct', 'desc')
+            ->first();
 
-            if ($derniereAssurance) {
-                $expiration = Carbon::parse($derniereAssurance->date_expiration_assurance);
-                $joursRestants = $today->diffInDays($expiration, false);
+        if ($dernierCT) {
+            $expiration = Carbon::parse($dernierCT->date_expiration_ct);
+            $joursRestants = $today->diffInDays($expiration, false);
 
-                if ($joursRestants < 0) {
-                    $count += $this->createOrUpdateAlert([
-                        'type' => Alert::TYPE_ASSURANCE_EXPIREE,
-                        'priorite' => Alert::PRIORITE_CRITIQUE,
-                        'alertable_type' => Vehicle::class,
-                        'alertable_id' => $vehicle->id,
-                        'titre' => "Assurance expirée - {$vehicle->immatriculation}",
-                        'message' => "L'assurance a expiré le {$expiration->format('d/m/Y')}.",
-                        'date_echeance' => $expiration,
-                        'jours_restants' => $joursRestants,
-                    ]);
-                } elseif ($joursRestants <= $this->seuilAssurance) {
-                    $count += $this->createOrUpdateAlert([
-                        'type' => Alert::TYPE_ASSURANCE_BIENTOT,
-                        'priorite' => $joursRestants <= 7 ? Alert::PRIORITE_HAUTE : Alert::PRIORITE_MOYENNE,
-                        'alertable_type' => Vehicle::class,
-                        'alertable_id' => $vehicle->id,
-                        'titre' => "Assurance expire bientôt - {$vehicle->immatriculation}",
-                        'message' => "L'assurance expire dans {$joursRestants} jours.",
-                        'date_echeance' => $expiration,
-                        'jours_restants' => $joursRestants,
-                    ]);
-                }
-            }
-
-            // Dernier CT
-            $dernierCT = Intervention::where('vehicle_id', $vehicle->id)
-                ->where('type', 'controle_technique')
-                ->whereNotNull('date_expiration_ct')
-                ->orderBy('date_expiration_ct', 'desc')
-                ->first();
-
-            if ($dernierCT) {
-                $expiration = Carbon::parse($dernierCT->date_expiration_ct);
-                $joursRestants = $today->diffInDays($expiration, false);
-
-                if ($joursRestants < 0) {
-                    $count += $this->createOrUpdateAlert([
-                        'type' => Alert::TYPE_CT_EXPIRE,
-                        'priorite' => Alert::PRIORITE_CRITIQUE,
-                        'alertable_type' => Vehicle::class,
-                        'alertable_id' => $vehicle->id,
-                        'titre' => "CT expiré - {$vehicle->immatriculation}",
-                        'message' => "Le CT a expiré le {$expiration->format('d/m/Y')}.",
-                        'date_echeance' => $expiration,
-                        'jours_restants' => $joursRestants,
-                    ]);
-                } elseif ($joursRestants <= $this->seuilCT) {
-                    $count += $this->createOrUpdateAlert([
-                        'type' => Alert::TYPE_CT_BIENTOT,
-                        'priorite' => $joursRestants <= 7 ? Alert::PRIORITE_HAUTE : Alert::PRIORITE_MOYENNE,
-                        'alertable_type' => Vehicle::class,
-                        'alertable_id' => $vehicle->id,
-                        'titre' => "CT expire bientôt - {$vehicle->immatriculation}",
-                        'message' => "Le CT expire dans {$joursRestants} jours.",
-                        'date_echeance' => $expiration,
-                        'jours_restants' => $joursRestants,
-                    ]);
-                }
+            if ($joursRestants < 0) {
+                $count += $this->createOrUpdateAlert([
+                    'type' => Alert::TYPE_CT_EXPIRE,
+                    'priorite' => Alert::PRIORITE_CRITIQUE,
+                    'alertable_type' => Vehicle::class,
+                    'alertable_id' => $vehicle->id,
+                    'titre' => "CT expiré - {$vehicle->immatriculation}",
+                    'message' => "Le CT a expiré le {$expiration->format('d/m/Y')}.",
+                    'date_echeance' => $expiration,
+                    'jours_restants' => $joursRestants,
+                ]);
+            } elseif ($joursRestants <= $this->seuilCT) {
+                $count += $this->createOrUpdateAlert([
+                    'type' => Alert::TYPE_CT_BIENTOT,
+                    'priorite' => $joursRestants <= 7 ? Alert::PRIORITE_HAUTE : Alert::PRIORITE_MOYENNE,
+                    'alertable_type' => Vehicle::class,
+                    'alertable_id' => $vehicle->id,
+                    'titre' => "CT expire bientôt - {$vehicle->immatriculation}",
+                    'message' => "Le CT expire dans {$joursRestants} jours.",
+                    'date_echeance' => $expiration,
+                    'jours_restants' => $joursRestants,
+                ]);
             }
         }
-
-        return $count;
     }
+
+    return $count;
+}
 
     public function checkInterventionsAlerts(): int
     {
@@ -281,4 +247,64 @@ class AlertService
             'notes_traitement' => $notes,
         ]);
     }
+
+    public function checkInsurancesAlerts(): int
+{
+    $count = 0;
+    $today = Carbon::today();
+
+    // Assurances actives ou expirées (pas archivées)
+    $insurances = Insurance::whereIn('statut', ['active', 'expiree'])->with('vehicle')->get();
+
+    foreach ($insurances as $insurance) {
+        if (!$insurance->vehicle) continue;
+
+        $expiration = Carbon::parse($insurance->date_expiration);
+        $joursRestants = $today->diffInDays($expiration, false);
+
+        if ($joursRestants < 0) {
+            $count += $this->createOrUpdateAlert([
+                'type' => Alert::TYPE_ASSURANCE_EXPIREE,
+                'priorite' => Alert::PRIORITE_CRITIQUE,
+                'alertable_type' => Vehicle::class,
+                'alertable_id' => $insurance->vehicle_id,
+                'titre' => "Assurance expirée - {$insurance->vehicle->immatriculation}",
+                'message' => "L'assurance ({$insurance->assureur}) a expiré le {$expiration->format('d/m/Y')}.",
+                'date_echeance' => $expiration,
+                'jours_restants' => $joursRestants,
+            ]);
+        } elseif ($joursRestants <= $this->seuilAssurance) {
+            $count += $this->createOrUpdateAlert([
+                'type' => Alert::TYPE_ASSURANCE_BIENTOT,
+                'priorite' => $joursRestants <= 7 ? Alert::PRIORITE_HAUTE : Alert::PRIORITE_MOYENNE,
+                'alertable_type' => Vehicle::class,
+                'alertable_id' => $insurance->vehicle_id,
+                'titre' => "Assurance expire bientôt - {$insurance->vehicle->immatriculation}",
+                'message' => "L'assurance ({$insurance->assureur}) expire dans {$joursRestants} jours.",
+                'date_echeance' => $expiration,
+                'jours_restants' => $joursRestants,
+            ]);
+        }
+    }
+
+    // Véhicules sans assurance active
+    $vehiclesSansAssurance = Vehicle::whereDoesntHave('insurances', function($q) {
+        $q->where('statut', 'active');
+    })->get();
+
+    foreach ($vehiclesSansAssurance as $vehicle) {
+        $count += $this->createOrUpdateAlert([
+            'type' => Alert::TYPE_ASSURANCE_EXPIREE,
+            'priorite' => Alert::PRIORITE_CRITIQUE,
+            'alertable_type' => Vehicle::class,
+            'alertable_id' => $vehicle->id,
+            'titre' => "Pas d'assurance - {$vehicle->immatriculation}",
+            'message' => "Ce véhicule n'a aucune assurance active.",
+            'date_echeance' => null,
+            'jours_restants' => null,
+        ]);
+    }
+
+    return $count;
+}
 }

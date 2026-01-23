@@ -12,14 +12,12 @@ class Intervention extends Model
     public const TYPE_ENTRETIEN = 'entretien';
     public const TYPE_REPARATION = 'reparation';
     public const TYPE_CONTROLE_TECHNIQUE = 'controle_technique';
-    public const TYPE_ASSURANCE = 'assurance';
     public const TYPE_AUTRE = 'autre';
 
     public const TYPES = [
         self::TYPE_ENTRETIEN => 'Entretien',
         self::TYPE_REPARATION => 'Réparation',
         self::TYPE_CONTROLE_TECHNIQUE => 'Contrôle technique',
-        self::TYPE_ASSURANCE => 'Assurance',
         self::TYPE_AUTRE => 'Autre',
     ];
 

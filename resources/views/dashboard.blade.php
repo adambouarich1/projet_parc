@@ -1,8 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-white font-semibold text-2xl leading-tight">
-            {{ __('Dashboard') }}
+            {{ __('Alertes') }}
         </h2>
+        <livewire:alerts-widget :limit="5" />
     </x-slot>
 
     <div class="py-12">
