@@ -13,6 +13,7 @@
         'interventions' => '🔧',
         'assurances' => '🛡️',
         'alertes' => '🔔',
+        'vignettes' => '🏷️',
     ];
 
     $tabLabels = [
@@ -21,6 +22,7 @@
         'interventions' => 'Interventions',
         'assurances' => 'Assurances',
         'alertes' => 'Alertes',
+        'vignettes' => 'Vignettes',
     ];
 ?>
 
@@ -367,6 +369,63 @@
                 </table>
             </div>
         @endif
+        {{-- Onglet Vignettes --}}
+@if($activeTab === 'vignettes')
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-800">
+            <thead class="bg-gray-800">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Véhicule</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Année</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Période</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Montant</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase">Référence</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-300 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+                @forelse ($items as $item)
+                    <tr class="hover:bg-gray-800/50 transition">
+                        <td class="px-4 py-3 text-sm text-gray-100">{{ $item->vehicle->immatriculation ?? '-' }}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2 py-1 text-sm font-bold rounded-lg bg-indigo-500/20 text-indigo-400">
+                                {{ $item->annee }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-300">
+                            {{ $item->date_debut->format('d/m/Y') }} → {{ $item->date_expiration->format('d/m/Y') }}
+                        </td>
+                        <td class="px-4 py-3 text-sm font-medium text-emerald-400">{{ number_format($item->montant, 2, ',', ' ') }} DH</td>
+                        <td class="px-4 py-3 text-sm text-gray-400 font-mono">{{ $item->reference_paiement ?? '-' }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex justify-end gap-2">
+                                @if(auth()->user()->canEdit())
+                                    <button wire:click="restore('vignette', {{ $item->id }})" class="text-emerald-400 hover:text-emerald-300 text-sm" title="Restaurer">
+                                        ♻️
+                                    </button>
+                                    <button 
+                                        wire:click="deletePermanently('vignette', {{ $item->id }})" 
+                                        wire:confirm="Supprimer définitivement cette vignette ?"
+                                        class="text-rose-400 hover:text-rose-300 text-sm" 
+                                        title="Supprimer définitivement"
+                                    >
+                                        🗑️
+                                    </button>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            Aucune vignette archivée
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+@endif
 
         {{-- Pagination --}}
         <div class="px-4 py-3 border-t border-gray-800">

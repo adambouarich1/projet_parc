@@ -8,6 +8,7 @@ use App\Models\Vehicle;
 use App\Models\Intervention;
 use Carbon\Carbon;
 use App\Models\Insurance;
+use App\Models\Vignette;
 
 class AlertService
 {
@@ -23,6 +24,7 @@ class AlertService
         'vehicles' => $this->checkVehiclesAlerts(),
         'interventions' => $this->checkInterventionsAlerts(),
         'insurances' => $this->checkInsurancesAlerts(),
+        'vignettes' => $this->checkVignettesAlerts(),
     ];
 
     return $stats;
@@ -307,4 +309,67 @@ class AlertService
 
     return $count;
 }
+
+public function checkVignettesAlerts(): int
+{
+    $count = 0;
+    $today = Carbon::today();
+    $seuilVignette = 30;
+
+    // Vignettes actives ou expirées (pas archivées)
+    $vignettes = Vignette::whereIn('statut', ['active', 'expiree'])->with('vehicle')->get();
+
+    foreach ($vignettes as $vignette) {
+        if (!$vignette->vehicle) continue;
+
+        $expiration = Carbon::parse($vignette->date_expiration);
+        $joursRestants = $today->diffInDays($expiration, false);
+
+        if ($joursRestants < 0) {
+            $count += $this->createOrUpdateAlert([
+                'type' => Alert::TYPE_VIGNETTE_EXPIREE,
+                'priorite' => Alert::PRIORITE_CRITIQUE,
+                'alertable_type' => Vehicle::class,
+                'alertable_id' => $vignette->vehicle_id,
+                'titre' => "Vignette expirée - {$vignette->vehicle->immatriculation}",
+                'message' => "La vignette {$vignette->annee} a expiré le {$expiration->format('d/m/Y')}.",
+                'date_echeance' => $expiration,
+                'jours_restants' => $joursRestants,
+            ]);
+        } elseif ($joursRestants <= $seuilVignette) {
+            $count += $this->createOrUpdateAlert([
+                'type' => Alert::TYPE_VIGNETTE_BIENTOT,
+                'priorite' => $joursRestants <= 7 ? Alert::PRIORITE_HAUTE : Alert::PRIORITE_MOYENNE,
+                'alertable_type' => Vehicle::class,
+                'alertable_id' => $vignette->vehicle_id,
+                'titre' => "Vignette expire bientôt - {$vignette->vehicle->immatriculation}",
+                'message' => "La vignette {$vignette->annee} expire dans {$joursRestants} jours.",
+                'date_echeance' => $expiration,
+                'jours_restants' => $joursRestants,
+            ]);
+        }
+    }
+
+    // Véhicules sans vignette pour l'année en cours
+    $anneeEnCours = date('Y');
+    $vehiculesSansVignette = Vehicle::whereDoesntHave('vignettes', function($q) use ($anneeEnCours) {
+        $q->where('annee', $anneeEnCours)->where('statut', 'active');
+    })->get();
+
+    foreach ($vehiculesSansVignette as $vehicle) {
+        $count += $this->createOrUpdateAlert([
+            'type' => Alert::TYPE_VIGNETTE_EXPIREE,
+            'priorite' => Alert::PRIORITE_HAUTE,
+            'alertable_type' => Vehicle::class,
+            'alertable_id' => $vehicle->id,
+            'titre' => "Pas de vignette {$anneeEnCours} - {$vehicle->immatriculation}",
+            'message' => "Ce véhicule n'a pas de vignette pour l'année {$anneeEnCours}.",
+            'date_echeance' => null,
+            'jours_restants' => null,
+        ]);
+    }
+
+    return $count;
+}
+
 }

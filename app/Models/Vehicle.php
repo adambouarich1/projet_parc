@@ -102,4 +102,25 @@ public function getAssureurActuelAttribute(): ?string
     return $this->currentInsurance?->assureur;
 }
 
+public function vignettes()
+{
+    return $this->hasMany(\App\Models\Vignette::class);
+}
+
+public function currentVignette()
+{
+    return $this->hasOne(\App\Models\Vignette::class)
+        ->where('statut', 'active')
+        ->orderBy('date_expiration', 'desc');
+}
+
+public function getVignetteStatutAttribute(): ?string
+{
+    $vignette = $this->currentVignette;
+    if (!$vignette) return 'Non payée';
+    if ($vignette->is_expiree) return 'Expirée';
+    if ($vignette->is_expire_bientot) return 'Expire bientôt';
+    return 'Valide';
+}
+
 }

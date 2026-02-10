@@ -9,6 +9,7 @@ use App\Livewire\Interventions;
 use App\Livewire\Alerts;
 use App\Livewire\Insurances;
 use App\Livewire\Archives;
+use App\Livewire\Vignettes;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('vehicles.index'))->middleware(['auth', 'verified']);
@@ -24,7 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('alertes', Alerts::class)->name('alerts.index');
     Route::get('assurances', Insurances::class)->name('insurances.index');
     Route::get('archives', Archives::class)->name('archives.index');
-
+    Route::get('vignettes', Vignettes::class)->name('vignettes.index');
 
     // Modification : interdit aux utilisateurs "consultation"
     Route::middleware(['role:admin,responsable_parc,valideur,agent_saisie'])->group(function () {

@@ -33,6 +33,9 @@
                     <x-nav-link :href="route('archives.index')" :active="request()->routeIs('archives.index')">
                         {{ __('Archives') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('vignettes.index')" :active="request()->routeIs('vignettes.index')">
+                        {{ __('Vignettes') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -110,6 +113,9 @@
             </x-nav-link>
             <x-responsive-nav-link :href="route('archives.index')" :active="request()->routeIs('archives.index')">
                     {{ __('Archives') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('vignettes.index')" :active="request()->routeIs('vignettes.index')">
+                    {{ __('Vignettes') }}
             </x-responsive-nav-link>
 
         </div>

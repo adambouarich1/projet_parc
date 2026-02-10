@@ -7,6 +7,7 @@ use App\Models\FuelEntry;
 use App\Models\Intervention;
 use App\Models\Insurance;
 use App\Models\Alert;
+use App\Models\Vignette;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -33,6 +34,7 @@ class Archives extends Component
             'interventions' => Intervention::archive()->count(),
             'assurances' => Insurance::where('statut', 'archivee')->count(),
             'alertes' => Alert::archive()->count(),
+            'vignettes' => Vignette::archive()->count(),
         ];
 
         // Données selon l'onglet actif
@@ -95,6 +97,16 @@ class Archives extends Component
                     ->latest()
                     ->paginate(10);
                 break;
+                case 'vignettes':
+                $data['items'] = Vignette::archive()
+                    ->with(['vehicle', 'user'])
+                    ->when($this->search, fn($q, $v) => $q->where(function($query) use ($v) {
+                        $query->where('reference_paiement', 'like', "%{$v}%")
+                                ->orWhereHas('vehicle', fn($q2) => $q2->where('immatriculation', 'like', "%{$v}%"));
+                    }))
+                    ->latest()
+                    ->paginate(10);
+                break;
         }
 
         return view('livewire.archives', array_merge($data, [
@@ -137,6 +149,10 @@ class Archives extends Component
                 $item = Alert::findOrFail($id);
                 $item->update(['statut' => Alert::STATUT_VUE]);
                 break;
+            case 'vignette':
+                $item = Vignette::findOrFail($id);
+                $item->update(['statut' => Vignette::STATUT_EXPIREE]);
+                break;
         }
 
         session()->flash('status', 'Élément restauré avec succès.');
@@ -159,6 +175,9 @@ class Archives extends Component
                 break;
             case 'alerte':
                 Alert::findOrFail($id)->delete();
+                break;
+            case 'vignette':
+                Vignette::findOrFail($id)->delete();
                 break;
         }
 
