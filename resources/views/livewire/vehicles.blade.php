@@ -1,571 +1,301 @@
-<?php
-    use Illuminate\Support\Facades\Storage;
-
-    $statusColors = [
-        'En service' => 'bg-emerald-100 text-emerald-700 border border-emerald-200',
-        'En réparation' => 'bg-amber-100 text-amber-700 border border-amber-200',
-        'Immobile' => 'bg-sky-100 text-sky-700 border border-sky-200',
-        'Hors service' => 'bg-rose-100 text-rose-700 border border-rose-200',
-        'Réformé' => 'bg-gray-800 text-gray-100 border border-gray-700',
-    ];
-
-        $roleBadges = [
-        'admin' => 'bg-rose-500 text-white',
-        'responsable_parc' => 'bg-indigo-500 text-white',
-        'valideur' => 'bg-amber-500 text-white',
-        'agent_saisie' => 'bg-emerald-500 text-white',
-        'consultation' => 'bg-gray-500 text-white',
-    ];
-?>
-
-<div class="space-y-4 text-gray-100">
-    {{-- Badge du rôle en haut à droite --}}
-    <div class="flex justify-end">
-        <span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full {{ $roleBadges[auth()->user()->role] ?? 'bg-gray-500 text-white' }}">
-            {{ auth()->user()->role_label }}
-        </span>
+<div class="p-6 text-gray-100">
+    {{-- Header --}}
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold">Gestion des Véhicules</h1>
+            <p class="text-gray-400 text-sm">{{ $vehicles->total() }} véhicule(s) au total</p>
+        </div>
+            @if(auth()->user()->canEdit())
+                <button wire:click="openCreate" class="mt-4 md:mt-0 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    Ajouter un véhicule
+                </button>
+            @endif
     </div>
 
+    {{-- Messages Flash --}}
     @if (session()->has('status'))
-        <div class="rounded-md bg-emerald-900/40 border border-emerald-700 text-emerald-100 px-4 py-3">
+        <div class="bg-green-500/10 border border-green-500 text-green-500 px-4 py-2 rounded mb-4">
             {{ session('status') }}
         </div>
     @endif
 
-    <div class="flex flex-col lg:flex-row gap-4">
-        <div class="lg:w-1/4 space-y-4">
-            <div class="bg-gray-900 shadow rounded-lg p-4 space-y-3 border border-gray-800">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-gray-100">Filtres</h3>
-                    <button
-                        type="button"
-                        wire:click="$set('filters', { service_affecte: '', categorie_vehicule: '', carburant: '', statut_actuel: '' })"
-                        class="text-xs text-gray-400 hover:text-gray-200"
-                    >
-                        Réinitialiser
-                    </button>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-gray-400">Service</label>
-                    <input type="text" wire:model.debounce.400ms="filters.service_affecte" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400" placeholder="Service affecté">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-gray-400">Catégorie</label>
-                    <select wire:model.live="filters.categorie_vehicule" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                        <option value="">Toutes</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-gray-400">Carburant</label>
-                    <select wire:model.live="filters.carburant" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                        <option value="">Tous</option>
-                        @foreach ($carburants as $fuel)
-                            <option value="{{ $fuel }}">{{ $fuel }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-gray-400">Statut</label>
-                    <select wire:model.live="filters.statut_actuel" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                        <option value="">Tous</option>
-                        @foreach ($statuts as $statut)
-                            <option value="{{ $statut }}">{{ $statut }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            @if(auth()->user()->canEdit())
-            <button
-                type="button"
-                wire:click="openCreate"
-                class="w-full inline-flex items-center justify-center px-4 py-3 bg-indigo-500 text-white rounded-md shadow hover:bg-indigo-600 transition"
+    {{-- Filtres et Recherche --}}
+    <div class="bg-gray-800 p-4 rounded-xl mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        {{-- Barre de recherche --}}
+        <div class="relative">
+            <input
+                type="text"
+                wire:model.live.debounce.300ms="search"
+                placeholder="Rechercher par immatriculation, marque..."
+                class="w-full bg-gray-700 text-white border-none rounded-lg pl-10 py-2 focus:ring-2 focus:ring-purple-500"
             >
-                Ajouter un véhicule
-            </button>
-            @endif
+            <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
 
-        <div class="flex-1 space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-100">Gestion du parc</h3>
-                </div>
-                @if(auth()->user()->canEdit())
-                <div class="hidden lg:block">
-                    <button
-                        type="button"
-                        wire:click="openCreate"
-                        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 transition"
-                    >
-                        + Ajouter un véhicule
-                    </button>
-                </div>
-                @endif
-            </div>
+        {{-- Filtre Catégorie --}}
+        <select wire:model.live="filters.categorie_vehicule" class="bg-gray-700 text-white border-none rounded-lg py-2 focus:ring-2 focus:ring-purple-500">
+            <option value="">Toutes catégories</option>
+            @foreach($categories as $value => $label)
+                <option value="{{ $value }}">{{ $label }}</option>
+            @endforeach
+        </select>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                @forelse ($vehicles as $vehicle)
-                    <div class="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-lg border border-gray-700/50 overflow-hidden hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300" wire:key="vehicle-{{ $vehicle->id }}">
-    {{-- Bande de statut en haut --}}
-    @php
-        $statusBands = [
-            'En service' => 'bg-emerald-500',
-            'En réparation' => 'bg-amber-500',
-            'Immobile' => 'bg-sky-500',
-            'Hors service' => 'bg-rose-500',
-            'Réformé' => 'bg-gray-600',
-        ];
-    @endphp
-    <div class="h-1 {{ $statusBands[$vehicle->statut_actuel] ?? 'bg-gray-600' }}"></div>
-    
-    <div class="p-5">
-        {{-- Header avec marque/modèle et bouton info --}}
-        <div class="flex items-start justify-between gap-3">
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl"></span>
-                    <div>
-                        <h4 class="text-lg font-bold text-white truncate">{{ $vehicle->marque }} {{ $vehicle->modele }}</h4>
-                        <p class="text-sm text-indigo-400 font-mono">{{ $vehicle->immatriculation }}</p>
-                    </div>
-                </div>
-            </div>
-            <button
-                type="button"
-                wire:click="openDetails({{ $vehicle->id }})"
-                class="h-10 w-10 inline-flex items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 hover:text-indigo-300 transition-colors"
-                title="Détails"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </button>
-        </div>
+        {{-- Filtre Carburant --}}
+        <select wire:model.live="filters.carburant" class="bg-gray-700 text-white border-none rounded-lg py-2 focus:ring-2 focus:ring-purple-500">
+            <option value="">Tous carburants</option>
+            @foreach($carburants as $value => $label)
+                <option value="{{ $value }}">{{ $label }}</option>
+            @endforeach
+        </select>
 
-        {{-- Infos principales --}}
-        <div class="mt-4 grid grid-cols-2 gap-3">
-            <div class="bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
-                <p class="text-xs text-gray-500 uppercase tracking-wide">Kilométrage</p>
-                <p class="text-lg font-bold text-white">{{ number_format($vehicle->kilometrage_actuel, 0, ',', ' ') }} <span class="text-xs text-gray-400 font-normal">km</span></p>
-            </div>
-            <div class="bg-gray-800/50 rounded-xl p-3 border border-gray-700/50">
-                <p class="text-xs text-gray-500 uppercase tracking-wide">Statut</p>
-                <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded-full {{ $statusColors[$vehicle->statut_actuel] ?? 'bg-gray-800 text-gray-200 border border-gray-700' }}">
-                    {{ $vehicle->statut_actuel }}
-                </span>
-            </div>
-        </div>
-
-        {{-- Tags catégorie/carburant --}}
-        <div class="mt-3 flex flex-wrap gap-2">
-            @if($vehicle->categorie_vehicule)
-                <span class="inline-flex items-center px-2 py-1 text-xs rounded-lg bg-gray-700/50 text-gray-300 border border-gray-600/50">
-                    📦 {{ $vehicle->categorie_vehicule }}
-                </span>
-            @endif
-            @if($vehicle->carburant)
-                <span class="inline-flex items-center px-2 py-1 text-xs rounded-lg bg-gray-700/50 text-gray-300 border border-gray-600/50">
-                    ⛽ {{ $vehicle->carburant }}
-                </span>
-            @endif
-        </div>
-
-        {{-- Assureur --}}
-        <div class="mt-3 flex items-center gap-2 p-2 rounded-lg {{ $vehicle->assureur_actuel ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-rose-500/10 border border-rose-500/30' }}">
-            <span class="text-sm">🛡️</span>
-            @if($vehicle->assureur_actuel)
-                <span class="text-sm text-emerald-400 font-medium">{{ $vehicle->assureur_actuel }}</span>
-            @else
-                <span class="text-sm text-rose-400 font-medium">Non assuré</span>
-            @endif
-        </div>
-
-        {{-- Actions --}}
-        @if(auth()->user()->canEdit())
-        <div class="mt-4 flex items-center justify-end gap-2 pt-3 border-t border-gray-700/50">
-            <button
-                type="button"
-                wire:click="openEdit({{ $vehicle->id }})"
-                class="px-4 py-2 text-xs font-semibold text-indigo-300 bg-indigo-500/20 rounded-lg hover:bg-indigo-500/30 transition-colors"
-            >
-                ✏️ Modifier
-            </button>
-            <button
-                type="button"
-                x-data
-                x-on:click.prevent="if (confirm('Supprimer ce véhicule ?')) { $wire.deleteVehicle({{ $vehicle->id }}) }"
-                class="px-4 py-2 text-xs font-semibold text-rose-300 bg-rose-500/20 rounded-lg hover:bg-rose-500/30 transition-colors"
-            >
-                🗑️ Supprimer
-            </button>
-        </div>
-        @endif
-    </div>
-</div>
-                @empty
-                    <div class="col-span-full bg-gray-900 border border-dashed border-gray-800 rounded-lg p-8 text-center text-gray-300">
-                        Aucun véhicule pour le moment. Cliquez sur « Ajouter un véhicule » pour démarrer.
-                    </div>
-                @endforelse
-            </div>
-
-            <div>
-                {{ $vehicles->links() }}
-            </div>
-        </div>
+        {{-- Filtre Statut --}}
+        <select wire:model.live="filters.statut_actuel" class="bg-gray-700 text-white border-none rounded-lg py-2 focus:ring-2 focus:ring-purple-500">
+            <option value="">Tous statuts</option>
+            @foreach($statuts as $value => $label)
+                <option value="{{ $value }}">{{ $label }}</option>
+            @endforeach
+        </select>
     </div>
 
-    @if ($showFormModal)
-        <div class="fixed inset-0 bg-black/60 z-40 flex items-start justify-center overflow-y-auto py-10 px-4" wire:key="form-modal">
-            <div class="bg-gray-900 rounded-xl shadow-2xl max-w-6xl w-full relative border border-gray-800">
-                <button
-                    type="button"
-                    class="absolute top-3 right-3 h-8 w-8 inline-flex items-center justify-center rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700"
-                    wire:click="$set('showFormModal', false)"
-                >
-                    ✕
-                </button>
-                <form wire:submit.prevent="save" class="p-6 space-y-6">
-                    <div class="flex items-center justify-between">
+    {{-- Grille des véhicules --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @forelse($vehicles as $vehicle)
+            @php
+                $statutColors = [
+                    'En service' => 'bg-green-900/80 text-green-200 border-green-700',
+                    'En réparation' => 'bg-red-900/80 text-red-200 border-red-700',
+                    'Immobile' => 'bg-yellow-900/80 text-yellow-200 border-yellow-700',
+                    'Hors service' => 'bg-gray-900/80 text-gray-200 border-gray-700',
+                    'Réformé' => 'bg-purple-900/80 text-purple-200 border-purple-700',
+                ];
+                $statutClass = $statutColors[$vehicle->statut_actuel] ?? 'bg-gray-900/80 text-white border-gray-600';
+            @endphp
+            <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 hover:border-purple-500 transition group">
+                {{-- Image --}}
+                <div class="h-40 bg-gray-700 relative">
+                    @if($vehicle->image_path)
+                        <img src="{{ Storage::url($vehicle->image_path) }}" alt="{{ $vehicle->marque }}" class="w-full h-full object-cover">
+                    @else
+                        <div class="flex flex-col items-center justify-center h-full bg-gradient-to-br from-gray-700 to-gray-800 p-4">
+                            <h3 class="text-2xl font-bold text-white mb-1">{{ $vehicle->marque }}</h3>
+                            <span class="text-purple-300 font-mono text-sm bg-purple-900/30 px-2 py-0.5 rounded">{{ $vehicle->immatriculation }}</span>
+                        </div>
+                    @endif
+                    <div class="absolute top-2 right-2">
+                        <span class="px-2 py-1 text-xs rounded-full border {{ $statutClass }}">
+                            {{ $vehicle->statut_actuel }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Contenu Carte --}}
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-2">
                         <div>
-                            <p class="text-sm text-gray-400">Formulaire véhicule</p>
-                            <h3 class="text-xl font-semibold text-gray-100">
-                                {{ $editingId ? 'Modifier un véhicule' : 'Ajouter un véhicule' }}
-                            </h3>
-                        </div>
-                        <div class="text-sm text-gray-400">
-                            Les champs techniques, administratifs et financiers sont regroupés.
+                            <h3 class="font-bold text-lg text-white">{{ $vehicle->marque }} {{ $vehicle->modele }}</h3>
+                            <p class="text-purple-400 text-sm font-mono">{{ $vehicle->immatriculation }}</p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-1 space-y-3">
-                            <h4 class="text-sm font-semibold text-gray-100">Administratif</h4>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Immatriculation *</label>
-                                <input type="text" wire:model.live="form.immatriculation" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                @error('form.immatriculation') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">VIN</label>
-                                <input type="text" wire:model.live="form.vin" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                @error('form.vin') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Type carte grise</label>
-                                <input type="text" wire:model.live="form.type_carte_grise" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Propriétaire légal</label>
-                                <input type="text" wire:model.live="form.proprietaire_legal" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Service affecté</label>
-                                <input type="text" wire:model.live="form.service_affecte" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Responsable du service</label>
-                                <input type="text" wire:model.live="form.responsable_service" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Lieu de stationnement</label>
-                                <input type="text" wire:model.live="form.lieu_stationnement" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Date mise en circulation</label>
-                                <input type="date" wire:model.live="form.date_mise_circulation" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Date d'acquisition</label>
-                                <input type="date" wire:model.live="form.date_acquisition" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Mode d'acquisition</label>
-                                <input type="text" wire:model.live="form.mode_acquisition" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Puissance fiscale</label>
-                                <input type="number" step="0.01" wire:model.live="form.puissance_fiscale" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Catégorie fiscale</label>
-                                <input type="text" wire:model.live="form.categorie_fiscale" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                            </div>
+                    <div class="space-y-2 text-sm text-gray-400 mt-4">
+                        <div class="flex justify-between">
+                            <span>Kilométrage</span>
+                            <span class="text-white">{{ number_format($vehicle->kilometrage_actuel, 0, ',', ' ') }} km</span>
                         </div>
-
-                        <div class="lg:col-span-1 space-y-3">
-                            <h4 class="text-sm font-semibold text-gray-100">Technique</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Marque *</label>
-                                    <input type="text" wire:model.live="form.marque" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                    @error('form.marque') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Modèle *</label>
-                                    <input type="text" wire:model.live="form.modele" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                    @error('form.modele') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Version</label>
-                                    <input type="text" wire:model.live="form.version" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Catégorie véhicule</label>
-                                    <select wire:model.live="form.categorie_vehicule" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                        <option value="">Sélectionner</option>
-                                        @foreach ($categories as $cat)
-                                            <option value="{{ $cat }}">{{ $cat }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Carburant</label>
-                                    <select wire:model.live="form.carburant" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                        <option value="">Sélectionner</option>
-                                        @foreach ($carburants as $fuel)
-                                            <option value="{{ $fuel }}">{{ $fuel }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('form.carburant') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Couleur</label>
-                                    <input type="text" wire:model.live="form.couleur" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Poids à vide (kg)</label>
-                                    <input type="number" step="0.01" wire:model.live="form.poids_vide" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">PTAC (kg)</label>
-                                    <input type="number" step="0.01" wire:model.live="form.ptac" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Numéro moteur</label>
-                                    <input type="text" wire:model.live="form.num_moteur" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Cylindrée</label>
-                                    <input type="number" step="0.01" wire:model.live="form.cylindree" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Puissance DIN</label>
-                                    <input type="number" step="0.01" wire:model.live="form.puissance_din" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Capacité réservoir</label>
-                                    <input type="number" step="0.01" wire:model.live="form.capacite_reservoir" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Capacité de charge</label>
-                                    <input type="number" step="0.01" wire:model.live="form.capacite_charge" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Nombre de places</label>
-                                    <input type="number" wire:model.live="form.nombre_places" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Kilométrage initial *</label>
-                                    <input type="number" wire:model.live="form.kilometrage_initial" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                    @error('form.kilometrage_initial') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Kilométrage actuel *</label>
-                                    <input type="number" wire:model.live="form.kilometrage_actuel" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                    @error('form.kilometrage_actuel') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Heures moteur</label>
-                                    <input type="number" wire:model.live="form.heures_moteur" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                            </div>
+                        <div class="flex justify-between">
+                            <span>Carburant</span>
+                            <span class="text-white">{{ $vehicle->carburant }}</span>
                         </div>
+                        <div class="flex justify-between">
+                            <span>Catégorie</span>
+                            <span class="text-white">{{ $vehicle->categorie_vehicule }}</span>
+                        </div>
+                    </div>
 
-                        <div class="lg:col-span-1 space-y-3">
-                            <h4 class="text-sm font-semibold text-gray-100">Financier & médias</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Prix d'achat</label>
-                                    <input type="number" step="0.01" wire:model.live="form.prix_achat" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
+                    {{-- Actions --}}
+                    <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center">
+                        <button wire:click="openDetails({{ $vehicle->id }})" class="text-sm text-purple-400 hover:text-purple-300">Voir détails</button>
+                            @if(auth()->user()->canEdit())
+                                <div class="flex space-x-2">
+                                    <button wire:click="openEdit({{ $vehicle->id }})" class="p-1 text-gray-400 hover:text-white transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </button>
+                                    <button
+                                        wire:click="deleteVehicle({{ $vehicle->id }})"
+                                        wire:confirm="Êtes-vous sûr de vouloir supprimer ce véhicule ?"
+                                        class="p-1 text-gray-400 hover:text-red-500 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
                                 </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Fournisseur (nom)</label>
-                                    <input type="text" wire:model.live="form.fournisseur_nom" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Fournisseur ICE</label>
-                                    <input type="text" wire:model.live="form.fournisseur_ice" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Bon de commande</label>
-                                    <input type="text" wire:model.live="form.bon_commande_ref" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Article budgétaire</label>
-                                    <input type="text" wire:model.live="form.article_budgetaire" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Durée amortissement</label>
-                                    <input type="number" wire:model.live="form.duree_amortissement" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Mode amortissement</label>
-                                    <input type="text" wire:model.live="form.mode_amortissement" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-xs text-gray-300">Valeur nette comptable</label>
-                                    <input type="number" step="0.01" wire:model.live="form.valeur_nette_comptable" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                </div>
+                            @endif
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="col-span-full text-center py-12 text-gray-500">
+                Aucun véhicule trouvé.
+            </div>
+        @endforelse
+    </div>
+
+    {{-- Pagination --}}
+    <div class="mt-6">
+        {{ $vehicles->links() }}
+    </div>
+
+    {{-- MODALE : Création / Edition --}}
+    @if($showFormModal)
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true" wire:click="$set('showFormModal', false)"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-700">
+                <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="text-lg leading-6 font-medium text-white" id="modal-title">
+                            {{ $editingId ? 'Modifier le véhicule' : 'Ajouter un véhicule' }}
+                        </h3>
+                        <button wire:click="$set('showFormModal', false)" class="text-gray-400 hover:text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <form wire:submit.prevent="save">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            {{-- Immatriculation --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Immatriculation *</label>
+                                <input type="text" wire:model="form.immatriculation" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                @error('form.immatriculation') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Statut *</label>
-                                <select wire:model.live="form.statut_actuel" class="w-full rounded-md border-gray-700 bg-gray-800 text-gray-100 shadow-sm text-sm focus:border-indigo-400 focus:ring-indigo-400">
-                                    @foreach ($statuts as $statut)
-                                        <option value="{{ $statut }}">{{ $statut }}</option>
+                            {{-- Marque --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Marque *</label>
+                                <input type="text" wire:model="form.marque" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                @error('form.marque') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- Modèle --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Modèle *</label>
+                                <input type="text" wire:model="form.modele" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                @error('form.modele') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- Catégorie --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Catégorie *</label>
+                                <select wire:model="form.categorie_vehicule" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach($categories as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
                                 </select>
-                                @error('form.statut_actuel') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
+                                @error('form.categorie_vehicule') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs text-gray-300">Image</label>
-                                <input type="file" wire:model="image" accept="image/*" class="w-full text-sm">
-                                @error('image') <p class="text-xs text-rose-600">{{ $message }}</p> @enderror
-                                <div class="flex items-center gap-3">
-                                    @if ($image)
-                                        <img src="{{ $image->temporaryUrl() }}" class="h-16 w-16 object-cover rounded border">
-                                    @elseif ($currentImagePath)
-                                        <img src="{{ Storage::url($currentImagePath) }}" class="h-16 w-16 object-cover rounded border">
-                                    @endif
-                                    <p class="text-xs text-gray-500">PNG/JPG jusqu'à 2 Mo.</p>
-                                </div>
+                            {{-- Carburant (CORRIGÉ) --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Carburant *</label>
+                                <select wire:model="form.carburant" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                    <option value="">-- Sélectionner --</option>
+                                    @foreach($carburants as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('form.carburant') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
+
+                            {{-- Kilométrage --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Kilométrage Actuel</label>
+                                <input type="number" wire:model="form.kilometrage_actuel" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                @error('form.kilometrage_actuel') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- Date Mise en Circulation --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Date mise en circulation</label>
+                                <input type="date" wire:model="form.date_mise_circulation" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                @error('form.date_mise_circulation') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- Statut --}}
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Statut</label>
+                                <select wire:model="form.statut_actuel" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                    @foreach($statuts as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('form.statut_actuel') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- Image --}}
+                            <div class="col-span-1 md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-400 mb-1">Photo du véhicule</label>
+                                <input type="file" wire:model="image" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700">
+                                <div wire:loading wire:target="image" class="text-xs text-purple-400 mt-1">Chargement de l'image...</div>
+                                @error('image') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
                         </div>
-                    </div>
 
-                    <div class="flex items-center justify-end gap-2 pt-2 border-t">
-                        <button type="button" wire:click="$set('showFormModal', false)" class="px-4 py-2 rounded-md text-gray-200 bg-gray-800 hover:bg-gray-700 border border-gray-700">
-                            Annuler
-                        </button>
-                        <button type="submit" class="px-5 py-2 rounded-md bg-indigo-500 text-white hover:bg-indigo-600 shadow">
-                            {{ $editingId ? 'Mettre à jour' : 'Enregistrer' }}
-                        </button>
-                    </div>
-                </form>
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button type="button" wire:click="$set('showFormModal', false)" class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600">Annuler</button>
+                            <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                                {{ $editingId ? 'Mettre à jour' : 'Enregistrer' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
+    </div>
     @endif
 
-    @if ($showDetailsModal && $detailVehicle)
-        <div class="fixed inset-0 bg-black/60 z-40 flex items-start justify-center overflow-y-auto py-10 px-4" wire:key="details-modal">
-            <div class="bg-gray-900 rounded-xl shadow-2xl max-w-6xl w-full relative border border-gray-800">
-                <button
-                    type="button"
-                    class="absolute top-3 right-3 h-8 w-8 inline-flex items-center justify-center rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700"
-                    wire:click="$set('showDetailsModal', false)"
-                >
-                    ✕
-                </button>
-                <div class="p-6 space-y-4 text-gray-100" x-data="{ tab: 'admin' }">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <p class="text-sm text-gray-500">Fiche détaillée</p>
-                            <h3 class="text-xl font-semibold text-gray-100">
-                                {{ $detailVehicle->marque }} {{ $detailVehicle->modele }} — {{ $detailVehicle->immatriculation }}
-                            </h3>
-                            <div class="mt-2 inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full {{ $statusColors[$detailVehicle->statut_actuel] ?? 'bg-gray-800 text-gray-200 border border-gray-700' }}">
+    {{-- MODALE : Détails (Simplifiée) --}}
+    @if($showDetailsModal && $detailVehicle)
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" wire:click="$set('showDetailsModal', false)"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-700">
+                <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6">
+                    <h3 class="text-xl font-bold text-white mb-4">{{ $detailVehicle->marque }} {{ $detailVehicle->modele }}</h3>
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="text-gray-400">Immatriculation:</div>
+                        <div class="text-white">{{ $detailVehicle->immatriculation }}</div>
+
+                        <div class="text-gray-400">VIN:</div>
+                        <div class="text-white">{{ $detailVehicle->vin ?? 'N/A' }}</div>
+
+                        <div class="text-gray-400">Statut:</div>
+                        <div class="text-white">
+                             <span class="px-2 py-0.5 rounded-full bg-purple-900 text-purple-200 border border-purple-700">
                                 {{ $detailVehicle->statut_actuel }}
-                            </div>
+                             </span>
                         </div>
-                        @if ($detailVehicle->image_path)
-                            <img src="{{ Storage::url($detailVehicle->image_path) }}" class="h-20 w-20 object-cover rounded-lg border" alt="Photo véhicule">
-                        @endif
+
+                        {{-- Ajoutez d'autres champs ici selon besoin --}}
                     </div>
 
-                    <div class="flex gap-2">
-                        <button type="button" class="px-3 py-2 rounded-md text-sm font-semibold"
-                            :class="tab === 'admin' ? 'bg-indigo-900/60 text-indigo-200 border border-indigo-800' : 'bg-gray-800 text-gray-200 border border-gray-700'"
-                            @click="tab = 'admin'">
-                            Administratif
-                        </button>
-                        <button type="button" class="px-3 py-2 rounded-md text-sm font-semibold"
-                            :class="tab === 'tech' ? 'bg-indigo-900/60 text-indigo-200 border border-indigo-800' : 'bg-gray-800 text-gray-200 border border-gray-700'"
-                            @click="tab = 'tech'">
-                            Technique
-                        </button>
-                        <button type="button" class="px-3 py-2 rounded-md text-sm font-semibold"
-                            :class="tab === 'fin' ? 'bg-indigo-900/60 text-indigo-200 border border-indigo-800' : 'bg-gray-800 text-gray-200 border border-gray-700'"
-                            @click="tab = 'fin'">
-                            Financier
-                        </button>
-                    </div>
-
-                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700" x-show="tab === 'admin'" x-cloak>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                            <div><span class="text-gray-500 text-xs">Immatriculation</span><p class="font-semibold">{{ $detailVehicle->immatriculation }}</p></div>
-                            <div><span class="text-gray-500 text-xs">VIN</span><p class="font-semibold">{{ $detailVehicle->vin }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Type carte grise</span><p class="font-semibold">{{ $detailVehicle->type_carte_grise }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Propriétaire légal</span><p class="font-semibold">{{ $detailVehicle->proprietaire_legal }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Service affecté</span><p class="font-semibold">{{ $detailVehicle->service_affecte }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Responsable</span><p class="font-semibold">{{ $detailVehicle->responsable_service }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Stationnement</span><p class="font-semibold">{{ $detailVehicle->lieu_stationnement }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Mise en circulation</span><p class="font-semibold">{{ optional($detailVehicle->date_mise_circulation)->format('d/m/Y') }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Acquisition</span><p class="font-semibold">{{ optional($detailVehicle->date_acquisition)->format('d/m/Y') }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Mode acquisition</span><p class="font-semibold">{{ $detailVehicle->mode_acquisition }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Puissance fiscale</span><p class="font-semibold">{{ $detailVehicle->puissance_fiscale }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Catégorie fiscale</span><p class="font-semibold">{{ $detailVehicle->categorie_fiscale }}</p></div>
-                        </div>
-                    </div>
-                                        <div>
-                        <span class="text-gray-500 text-xs">Assureur actuel</span>
-                        @if($detailVehicle->assureur_actuel)
-                            <p class="font-semibold text-emerald-400">{{ $detailVehicle->assureur_actuel }}</p>
-                        @else
-                            <p class="font-semibold text-rose-400">Aucune assurance active</p>
-                        @endif
-                    </div>
-
-                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700" x-show="tab === 'tech'" x-cloak>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                            <div><span class="text-gray-500 text-xs">Marque</span><p class="font-semibold text-gray-100">{{ $detailVehicle->marque }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Modèle</span><p class="font-semibold text-gray-100">{{ $detailVehicle->modele }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Version</span><p class="font-semibold text-gray-100">{{ $detailVehicle->version }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Catégorie véhicule</span><p class="font-semibold text-gray-100">{{ $detailVehicle->categorie_vehicule }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Carburant</span><p class="font-semibold text-gray-100">{{ $detailVehicle->carburant }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Couleur</span><p class="font-semibold text-gray-100">{{ $detailVehicle->couleur }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Poids à vide</span><p class="font-semibold text-gray-100">{{ $detailVehicle->poids_vide }}</p></div>
-                            <div><span class="text-gray-500 text-xs">PTAC</span><p class="font-semibold text-gray-100">{{ $detailVehicle->ptac }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Numéro moteur</span><p class="font-semibold text-gray-100">{{ $detailVehicle->num_moteur }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Cylindrée</span><p class="font-semibold text-gray-100">{{ $detailVehicle->cylindree }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Puissance DIN</span><p class="font-semibold text-gray-100">{{ $detailVehicle->puissance_din }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Capacité réservoir</span><p class="font-semibold text-gray-100">{{ $detailVehicle->capacite_reservoir }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Capacité charge</span><p class="font-semibold text-gray-100">{{ $detailVehicle->capacite_charge }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Places</span><p class="font-semibold text-gray-100">{{ $detailVehicle->nombre_places }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Km initial</span><p class="font-semibold text-gray-100">{{ $detailVehicle->kilometrage_initial }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Km actuel</span><p class="font-semibold text-gray-100">{{ $detailVehicle->kilometrage_actuel }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Heures moteur</span><p class="font-semibold text-gray-100">{{ $detailVehicle->heures_moteur }}</p></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700" x-show="tab === 'fin'" x-cloak>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                            <div><span class="text-gray-500 text-xs">Prix d'achat</span><p class="font-semibold text-gray-100">{{ $detailVehicle->prix_achat }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Fournisseur</span><p class="font-semibold text-gray-100">{{ $detailVehicle->fournisseur_nom }}</p></div>
-                            <div><span class="text-gray-500 text-xs">ICE</span><p class="font-semibold text-gray-100">{{ $detailVehicle->fournisseur_ice }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Bon de commande</span><p class="font-semibold text-gray-100">{{ $detailVehicle->bon_commande_ref }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Article budgétaire</span><p class="font-semibold text-gray-100">{{ $detailVehicle->article_budgetaire }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Durée amortissement</span><p class="font-semibold text-gray-100">{{ $detailVehicle->duree_amortissement }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Mode amortissement</span><p class="font-semibold text-gray-100">{{ $detailVehicle->mode_amortissement }}</p></div>
-                            <div><span class="text-gray-500 text-xs">Valeur nette comptable</span><p class="font-semibold text-gray-100">{{ $detailVehicle->valeur_nette_comptable }}</p></div>
-                        </div>
+                    <div class="mt-6 flex justify-end">
+                        <button type="button" wire:click="$set('showDetailsModal', false)" class="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600">Fermer</button>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     @endif
 </div>

@@ -15,6 +15,8 @@ class Drivers extends Component
     use WithPagination;
     use WithFileUploads;
 
+    public $search = ''; // Ajouté pour la barre de recherche
+
     public array $filters = [
         'service_affecte' => '',
         'statut_actuel' => '',
@@ -32,7 +34,22 @@ class Drivers extends Component
     public bool $showFormModal = false;
     public bool $showDetailsModal = false;
 
-    public array $statuts = ['Disponible', 'En congé', 'Maladie', 'Non disponible'];
+    // Tableaux associatifs pour corriger la validation et l'affichage
+    public array $statuts = [
+        'Disponible' => 'Disponible',
+        'En congé' => 'En congé',
+        'Maladie' => 'Maladie',
+        'Non disponible' => 'Non disponible'
+    ];
+
+    public array $categoriesPermis = [
+        'A' => 'A (Moto)',
+        'B' => 'B (Voiture)',
+        'C' => 'C (Camion)',
+        'D' => 'D (Bus)',
+        'E' => 'E (Remorque)',
+        'F' => 'F (Spécial)'
+    ];
 
     protected $paginationTheme = 'tailwind';
 
@@ -44,6 +61,11 @@ class Drivers extends Component
     public function render(): View
     {
         $drivers = Driver::query()
+            ->when($this->search, fn ($query) => 
+                $query->where('nom', 'like', '%' . $this->search . '%')
+                      ->orWhere('prenom', 'like', '%' . $this->search . '%')
+                      ->orWhere('matricule', 'like', '%' . $this->search . '%')
+            )
             ->when($this->filters['service_affecte'], fn ($query, $value) => $query->where('service_affecte', 'like', '%' . $value . '%'))
             ->when($this->filters['statut_actuel'], fn ($query, $value) => $query->where('statut_actuel', $value))
             ->when($this->filters['categories'], fn ($query, $value) => $query->where('categories', 'like', '%' . $value . '%'))
@@ -76,7 +98,7 @@ class Drivers extends Component
             'num_permis' => '',
             'date_delivrance' => '',
             'date_expiration' => '',
-            'categories' => '',
+            'categories' => '', // Sera stocké souvent sous forme "B" ou "B,C"
             'statut_actuel' => 'Disponible',
         ];
 
@@ -85,6 +107,7 @@ class Drivers extends Component
         $this->editingId = null;
         $this->currentPhotoPath = null;
         $this->currentScanPath = null;
+        $this->resetValidation();
     }
 
     public function openCreate(): void
@@ -136,21 +159,21 @@ class Drivers extends Component
         $validated = $this->validate($this->validationRules());
         $payload = $validated['form'];
 
+        // Gestion Photo
         if ($this->photo) {
             if ($this->currentPhotoPath) {
                 Storage::disk('public')->delete($this->currentPhotoPath);
             }
-
             $payload['photo_path'] = $this->photo->store('drivers/photos', 'public');
         } elseif ($this->currentPhotoPath) {
             $payload['photo_path'] = $this->currentPhotoPath;
         }
 
+        // Gestion Scan Permis
         if ($this->scan_permis) {
             if ($this->currentScanPath) {
                 Storage::disk('public')->delete($this->currentScanPath);
             }
-
             $payload['scan_permis_path'] = $this->scan_permis->store('drivers/permis', 'public');
         } elseif ($this->currentScanPath) {
             $payload['scan_permis_path'] = $this->currentScanPath;
@@ -173,13 +196,8 @@ class Drivers extends Component
     {
         $driver = Driver::findOrFail($driverId);
 
-        if ($driver->photo_path) {
-            Storage::disk('public')->delete($driver->photo_path);
-        }
-
-        if ($driver->scan_permis_path) {
-            Storage::disk('public')->delete($driver->scan_permis_path);
-        }
+        if ($driver->photo_path) Storage::disk('public')->delete($driver->photo_path);
+        if ($driver->scan_permis_path) Storage::disk('public')->delete($driver->scan_permis_path);
 
         $driver->delete();
         $this->resetPage();
@@ -189,16 +207,14 @@ class Drivers extends Component
     private function validationRules(): array
     {
         $rules = [];
-
+        // On suppose que DriverRequest existe et fonctionne
         foreach (DriverRequest::baseRules($this->editingId) as $field => $rule) {
             if (in_array($field, ['photo', 'scan_permis'], true)) {
                 $rules[$field] = $rule;
                 continue;
             }
-
             $rules['form.' . $field] = $rule;
         }
-
         return $rules;
     }
 
@@ -210,5 +226,5 @@ class Drivers extends Component
             }
         }
     }
+    
 }
-

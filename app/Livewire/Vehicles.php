@@ -15,6 +15,8 @@ class Vehicles extends Component
     use WithPagination;
     use WithFileUploads;
 
+    public $search = '';
+
     public array $filters = [
         'service_affecte' => '',
         'categorie_vehicule' => '',
@@ -32,9 +34,31 @@ class Vehicles extends Component
     public bool $showFormModal = false;
     public bool $showDetailsModal = false;
 
-    public array $carburants = ['Essence', 'Diesel', 'Electrique', 'Hybride'];
-    public array $categories = ['Léger', 'Utilitaire', 'Camion', 'Engin', 'Autre'];
-    public array $statuts = ['En service', 'En réparation', 'Immobile', 'Hors service', 'Réformé'];
+    // CORRECTION ICI : Utilisation de tableaux associatifs [Clé => Valeur]
+    // Cela garantit que la valeur envoyée au serveur est bien le texte (ex: "Essence") 
+    // et non l'index numérique (0, 1, 2...), ce qui corrige l'erreur de validation.
+    public array $carburants = [
+        'Essence' => 'Essence', 
+        'Diesel' => 'Diesel', 
+        'Electrique' => 'Electrique', 
+        'Hybride' => 'Hybride'
+    ];
+
+    public array $categories = [
+        'Léger' => 'Léger', 
+        'Utilitaire' => 'Utilitaire', 
+        'Camion' => 'Camion', 
+        'Engin' => 'Engin', 
+        'Autre' => 'Autre'
+    ];
+
+    public array $statuts = [
+        'En service' => 'En service', 
+        'En réparation' => 'En réparation', 
+        'Immobile' => 'Immobile', 
+        'Hors service' => 'Hors service', 
+        'Réformé' => 'Réformé'
+    ];
 
     protected $paginationTheme = 'tailwind';
 
@@ -46,6 +70,10 @@ class Vehicles extends Component
     public function render(): View
     {
         $vehicles = Vehicle::query()
+            ->when($this->search, fn ($query) => 
+                $query->where('immatriculation', 'like', '%' . $this->search . '%')
+                      ->orWhere('marque', 'like', '%' . $this->search . '%')
+            )
             ->when($this->filters['service_affecte'], fn ($query, $value) => $query->where('service_affecte', 'like', '%' . $value . '%'))
             ->when($this->filters['categorie_vehicule'], fn ($query, $value) => $query->where('categorie_vehicule', $value))
             ->when($this->filters['carburant'], fn ($query, $value) => $query->where('carburant', $value))
@@ -81,8 +109,8 @@ class Vehicles extends Component
             'marque' => '',
             'modele' => '',
             'version' => '',
-            'categorie_vehicule' => '',
-            'carburant' => '',
+            'categorie_vehicule' => '', // Sera 'Engin', 'Léger', etc.
+            'carburant' => '',          // Sera 'Essence', 'Diesel', etc.
             'couleur' => '',
             'poids_vide' => null,
             'ptac' => null,
@@ -109,6 +137,7 @@ class Vehicles extends Component
         $this->image = null;
         $this->editingId = null;
         $this->currentImagePath = null;
+        $this->resetValidation(); // Important pour effacer les erreurs rouges précédentes
     }
 
     public function openCreate(): void
@@ -123,6 +152,8 @@ class Vehicles extends Component
 
         $this->editingId = $vehicle->id;
         $this->currentImagePath = $vehicle->image_path;
+        
+        // Remplissage du formulaire avec les données existantes
         $this->form = [
             'immatriculation' => $vehicle->immatriculation,
             'vin' => $vehicle->vin,
@@ -176,33 +207,36 @@ class Vehicles extends Component
 
     public function save(): void
     {
-        $isEdit = (bool) $this->editingId;
         $this->normalizeForm();
+        
+        // Validation des données
         $validated = $this->validate($this->validationRules());
         $payload = $validated['form'];
 
+        // Gestion de l'upload d'image
         if ($this->image) {
             if ($this->currentImagePath) {
                 Storage::disk('public')->delete($this->currentImagePath);
             }
-
             $payload['image_path'] = $this->image->store('vehicles', 'public');
         } elseif ($this->currentImagePath) {
             $payload['image_path'] = $this->currentImagePath;
         }
 
+        // Création ou Mise à jour
         if ($this->editingId) {
             Vehicle::findOrFail($this->editingId)->update($payload);
+            session()->flash('status', 'Véhicule mis à jour avec succès.');
         } else {
             Vehicle::create($payload);
+            session()->flash('status', 'Véhicule créé avec succès.');
         }
 
+        // Nettoyage et fermeture
         $this->resetForm();
         $this->showFormModal = false;
         $this->showDetailsModal = false;
-        $this->resetPage();
-
-        session()->flash('status', $isEdit ? 'Véhicule mis à jour.' : 'Véhicule créé.');
+        $this->resetPage(); // Revenir à la page 1 pour voir le nouvel élément
     }
 
     public function deleteVehicle(int $vehicleId): void
@@ -223,12 +257,13 @@ class Vehicles extends Component
     {
         $rules = [];
 
+        // On suppose que VehicleRequest::baseRules renvoie un tableau ['immatriculation' => 'required', ...]
         foreach (VehicleRequest::baseRules($this->editingId) as $field => $rule) {
             if ($field === 'image') {
                 $rules['image'] = $rule;
                 continue;
             }
-
+            // On préfixe les champs par 'form.' car ils sont dans le tableau public $form
             $rules['form.' . $field] = $rule;
         }
 
@@ -237,6 +272,7 @@ class Vehicles extends Component
 
     private function normalizeForm(): void
     {
+        // Convertit les chaînes vides en null pour éviter les erreurs SQL sur les champs nullables
         foreach ($this->form as $key => $value) {
             if ($value === '') {
                 $this->form[$key] = null;

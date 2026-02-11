@@ -38,7 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('drivers/{driver}', [DriverController::class, 'destroy'])->name('drivers.destroy');
     });
 
-    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', \App\Livewire\Dashboard::class)->middleware(['auth', 'verified'])->name('dashboard');
 });
 
 Route::middleware('auth')->group(function () {
