@@ -190,5 +190,7 @@
     </div>
 
 </div>
+<!-- Modale de confirmation de suppression -->
+<x-delete-confirmation />
 </body>
 </html>
