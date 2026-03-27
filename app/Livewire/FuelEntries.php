@@ -78,7 +78,6 @@ class FuelEntries extends Component
             'quantite_litres' => '',
             'prix_unitaire' => '',
             'montant_total' => '',
-            'kilometrage' => '',
             'station' => '',
             'type_carburant' => '',
             'numero_bon' => '',
@@ -109,7 +108,6 @@ class FuelEntries extends Component
         if ($value) {
             $vehicle = Vehicle::find($value);
             if ($vehicle) {
-                $this->form['kilometrage'] = $vehicle->kilometrage_actuel;
                 $this->form['type_carburant'] = $vehicle->carburant;
             }
         }
@@ -158,7 +156,6 @@ class FuelEntries extends Component
             'form.quantite_litres' => 'required|numeric|min:1',
             'form.prix_unitaire' => 'required|numeric|min:0.01',
             'form.montant_total' => 'required|numeric|min:0.01',
-            'form.kilometrage' => 'required|integer|min:0',
             'form.station' => 'nullable|string|max:255',
             'form.type_carburant' => 'nullable|string|max:50',
             'form.numero_bon' => 'nullable|string|max:100',
@@ -177,12 +174,6 @@ class FuelEntries extends Component
             session()->flash('status', 'Entrée carburant mise à jour.');
         } else {
             FuelEntry::create($data);
-            
-            // Mettre à jour le km du véhicule si supérieur
-            $vehicle = Vehicle::find($data['vehicle_id']);
-            if ($vehicle && $data['kilometrage'] > $vehicle->kilometrage_actuel) {
-                $vehicle->update(['kilometrage_actuel' => $data['kilometrage']]);
-            }
             
             session()->flash('status', 'Entrée carburant enregistrée.');
         }

@@ -191,34 +191,6 @@
                                 </div>
                             </div>
  
-                            {{-- Bloc Consommation / Kilométrage --}}
-                            <div class="flex-1 flex items-center gap-3 bg-gray-900/50 rounded-xl px-4 py-3 border border-gray-700/40">
-                                <div class="p-2 rounded-lg shrink-0 border
-                                    @if($entry->consommation && $entry->consommation > 12) bg-rose-500/15 text-rose-400 border-rose-500/20
-                                    @elseif($entry->consommation && $entry->consommation > 9) bg-amber-500/15 text-amber-400 border-amber-500/20
-                                    @else bg-amber-500/15 text-amber-400 border-amber-500/20
-                                    @endif">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-amber-400 uppercase tracking-widest leading-none mb-1.5" style="font-size:18px;">Kilométrage</p>
-                                    <p class="font-bold text-white leading-tight" style="font-size:23px;">
-                                        {{ number_format($entry->kilometrage, 0, ',', ' ') }} <span class="text-amber-300" style="font-size:18px;">km</span>
-                                    </p>
-                                    @if($entry->consommation)
-                                        <p class="mt-0.5 font-semibold
-                                            @if($entry->consommation > 12) text-rose-400
-                                            @elseif($entry->consommation > 9) text-amber-400
-                                            @else text-emerald-400
-                                            @endif" style="font-size:18px;">
-                                            {{ $entry->consommation }} L/100km
-                                        </p>
-                                    @else
-                                        <p class="text-gray-600 mt-0.5" style="font-size:18px;">— L/100km</p>
-                                    @endif
-                                </div>
-                            </div>
- 
                         </div>
  
                         {{-- Boutons d'action --}}
@@ -317,11 +289,6 @@
                             <label class="text-xs font-semibold text-gray-300">Date du plein <span class="text-rose-500">*</span></label>
                             <input type="date" wire:model="form.date_plein" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all [&::-webkit-calendar-picker-indicator]:filter-invert">
                             @error('form.date_plein') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Kilométrage actuel <span class="text-rose-500">*</span></label>
-                            <input type="number" wire:model="form.kilometrage" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all" placeholder="Ex: 45200">
-                            @error('form.kilometrage') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
  
@@ -460,10 +427,6 @@
  
                 {{-- Détails --}}
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Kilométrage</p>
-                        <p class="font-semibold text-gray-200">{{ number_format($detailEntry->kilometrage, 0, ',', ' ') }} km</p>
-                    </div>
                     <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50">
                         <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Prix unitaire</p>
                         <p class="font-semibold text-gray-200">{{ number_format($detailEntry->prix_unitaire, 2, ',', ' ') }} DH/L</p>

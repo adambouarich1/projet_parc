@@ -215,9 +215,6 @@
                                 <div>
                                     <p class="font-bold uppercase tracking-widest leading-none mb-1.5 {{ $intervention->type === 'entretien' ? 'text-blue-400' : ($intervention->type === 'reparation' ? 'text-orange-400' : ($intervention->type === 'controle_technique' ? 'text-purple-400' : 'text-gray-400')) }}" style="font-size:18px;">Véhicule</p>
                                     <p class="font-bold text-white leading-tight" style="font-size:23px;">{{ $intervention->vehicle->marque }} {{ $intervention->vehicle->modele }}</p>
-                                    @if($intervention->kilometrage)
-                                        <p class="text-gray-400 mt-0.5" style="font-size:18px;">{{ number_format($intervention->kilometrage, 0, ',', ' ') }} km</p>
-                                    @endif
                                 </div>
                             </div>
  
@@ -227,14 +224,10 @@
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </div>
                                 <div>
-                                    <p class="font-bold text-emerald-400 uppercase tracking-widest leading-none mb-1.5" style="font-size:18px;">Coût</p>
+                                    <p class="font-bold text-emerald-400 uppercase tracking-widest leading-none mb-1.5" style="font-size:18px;">Coût de l'opération</p>
                                     <p class="font-bold text-white leading-tight" style="font-size:23px;">
                                         {{ number_format($intervention->cout_total, 2, ',', ' ') }} <span class="text-emerald-300" style="font-size:18px;">DH</span>
                                     </p>
-                                    <div class="flex gap-3 mt-0.5" style="font-size:18px;">
-                                        <span class="text-gray-500">Pièces <span class="text-gray-400">{{ number_format($intervention->cout_pieces, 0, ',', ' ') }}</span></span>
-                                        <span class="text-gray-500">MO <span class="text-gray-400">{{ number_format($intervention->cout_main_oeuvre, 0, ',', ' ') }}</span></span>
-                                    </div>
                                 </div>
                             </div>
  
@@ -249,11 +242,6 @@
                                         <p class="font-bold text-white leading-tight" style="font-size:23px;">{{ $intervention->date_prochaine->format('d/m/Y') }}</p>
                                     @else
                                         <p class="text-gray-600 font-semibold" style="font-size:23px;">—</p>
-                                    @endif
-                                    @if($intervention->km_prochaine)
-                                        <p class="text-gray-400 mt-0.5" style="font-size:18px;">{{ number_format($intervention->km_prochaine, 0, ',', ' ') }} km</p>
-                                    @else
-                                        <p class="text-gray-600 mt-0.5" style="font-size:18px;">— km</p>
                                     @endif
                                 </div>
                             </div>
@@ -370,39 +358,22 @@
                         <textarea wire:model="form.description" rows="2" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-gray-600"></textarea>
                     </div>
  
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
                             <label class="text-xs font-semibold text-gray-300">Date intervention <span class="text-rose-500">*</span></label>
                             <input type="date" wire:model="form.date_intervention" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all [&::-webkit-calendar-picker-indicator]:filter-invert">
                             @error('form.date_intervention') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Prochaine (date)</label>
+                            <label class="text-xs font-semibold text-gray-300">Date prochaine intervention</label>
                             <input type="date" wire:model="form.date_prochaine" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all [&::-webkit-calendar-picker-indicator]:filter-invert">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Kilométrage</label>
-                            <input type="number" wire:model="form.kilometrage" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Prochain (km)</label>
-                            <input type="number" wire:model="form.km_prochaine" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
                         </div>
                     </div>
  
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Coût pièces (DH)</label>
-                            <input type="number" step="0.01" wire:model.live="form.cout_pieces" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Main d'œuvre (DH)</label>
-                            <input type="number" step="0.01" wire:model.live="form.cout_main_oeuvre" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-400">Total (DH)</label>
-                            <input type="number" step="0.01" wire:model="form.cout_total" readonly class="w-full rounded-lg border border-gray-700/40 bg-gray-700/40 text-gray-300 text-sm cursor-not-allowed">
-                        </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-gray-300">Coût de l'opération (DH)</label>
+                        <input type="number" step="0.01" wire:model="form.cout_operation" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all" placeholder="Ex: 1500.00">
+                        @error('form.cout_operation') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                     </div>
  
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -528,40 +499,10 @@
                     @endif
                 </div>
  
-                @if($detailIntervention->kilometrage || $detailIntervention->km_prochaine)
-                <div class="grid grid-cols-2 gap-4">
-                    @if($detailIntervention->kilometrage)
-                    <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Kilométrage</p>
-                        <p class="font-semibold text-gray-200">{{ number_format($detailIntervention->kilometrage, 0, ',', ' ') }} km</p>
-                    </div>
-                    @endif
-                    @if($detailIntervention->km_prochaine)
-                    <div class="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
-                        <p class="text-[10px] font-bold text-amber-400/80 uppercase tracking-widest mb-1">Prochain km</p>
-                        <p class="font-semibold text-amber-300">{{ number_format($detailIntervention->km_prochaine, 0, ',', ' ') }} km</p>
-                    </div>
-                    @endif
-                </div>
-                @endif
- 
-                {{-- Coûts --}}
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50 text-center">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Pièces</p>
-                        <p class="font-semibold text-gray-200">{{ number_format($detailIntervention->cout_pieces, 2, ',', ' ') }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">DH</p>
-                    </div>
-                    <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50 text-center">
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Main d'œuvre</p>
-                        <p class="font-semibold text-gray-200">{{ number_format($detailIntervention->cout_main_oeuvre, 2, ',', ' ') }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">DH</p>
-                    </div>
-                    <div class="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20 text-center">
-                        <p class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest mb-1">Total</p>
-                        <p class="font-bold text-xl text-emerald-300">{{ number_format($detailIntervention->cout_total, 2, ',', ' ') }}</p>
-                        <p class="text-xs text-emerald-400/70 mt-0.5">DH</p>
-                    </div>
+                {{-- Coût --}}
+                <div class="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
+                    <p class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest mb-1">Coût de l'opération</p>
+                    <p class="font-bold text-2xl text-emerald-300">{{ number_format($detailIntervention->cout_total, 2, ',', ' ') }} <span class="text-base text-emerald-400/70">DH</span></p>
                 </div>
  
                 @if($detailIntervention->prestataire || $detailIntervention->numero_facture)

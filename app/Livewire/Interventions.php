@@ -75,11 +75,7 @@ class Interventions extends Component
             'description' => '',
             'date_intervention' => date('Y-m-d'),
             'date_prochaine' => '',
-            'kilometrage' => '',
-            'km_prochaine' => '',
-            'cout_pieces' => 0,
-            'cout_main_oeuvre' => 0,
-            'cout_total' => 0,
+            'cout_operation' => 0,
             'prestataire' => '',
             'numero_facture' => '',
             'assureur' => '',
@@ -91,31 +87,6 @@ class Interventions extends Component
             'observations' => '',
         ];
         $this->editingId = null;
-    }
-
-    public function updatedFormCoutPieces(): void
-    {
-        $this->calculateTotal();
-    }
-
-    public function updatedFormCoutMainOeuvre(): void
-    {
-        $this->calculateTotal();
-    }
-
-    private function calculateTotal(): void
-    {
-        $this->form['cout_total'] = ($this->form['cout_pieces'] ?: 0) + ($this->form['cout_main_oeuvre'] ?: 0);
-    }
-
-    public function updatedFormVehicleId($value): void
-    {
-        if ($value) {
-            $vehicle = Vehicle::find($value);
-            if ($vehicle) {
-                $this->form['kilometrage'] = $vehicle->kilometrage_actuel;
-            }
-        }
     }
 
     public function openCreate(): void
@@ -135,11 +106,7 @@ class Interventions extends Component
             'description' => $intervention->description,
             'date_intervention' => $intervention->date_intervention->format('Y-m-d'),
             'date_prochaine' => $intervention->date_prochaine?->format('Y-m-d') ?? '',
-            'kilometrage' => $intervention->kilometrage,
-            'km_prochaine' => $intervention->km_prochaine,
-            'cout_pieces' => $intervention->cout_pieces,
-            'cout_main_oeuvre' => $intervention->cout_main_oeuvre,
-            'cout_total' => $intervention->cout_total,
+            'cout_operation' => $intervention->cout_total,
             'prestataire' => $intervention->prestataire,
             'numero_facture' => $intervention->numero_facture,
             'assureur' => $intervention->assureur,
@@ -168,11 +135,7 @@ class Interventions extends Component
             'form.description' => 'nullable|string',
             'form.date_intervention' => 'required|date',
             'form.date_prochaine' => 'nullable|date',
-            'form.kilometrage' => 'nullable|integer|min:0',
-            'form.km_prochaine' => 'nullable|integer|min:0',
-            'form.cout_pieces' => 'nullable|numeric|min:0',
-            'form.cout_main_oeuvre' => 'nullable|numeric|min:0',
-            'form.cout_total' => 'nullable|numeric|min:0',
+            'form.cout_operation' => 'nullable|numeric|min:0',
             'form.prestataire' => 'nullable|string|max:255',
             'form.numero_facture' => 'nullable|string|max:100',
             'form.assureur' => 'nullable|string|max:255',
@@ -186,6 +149,10 @@ class Interventions extends Component
 
         $validated = $this->validate($rules);
         $data = $validated['form'];
+        $data['cout_total'] = $data['cout_operation'];
+        $data['cout_pieces'] = 0;
+        $data['cout_main_oeuvre'] = 0;
+        unset($data['cout_operation']);
         $data['user_id'] = auth()->id();
 
         // Convertir les champs vides en null
@@ -200,14 +167,6 @@ class Interventions extends Component
             session()->flash('status', 'Intervention mise à jour.');
         } else {
             Intervention::create($data);
-
-            // Mettre à jour le km du véhicule si supérieur
-            if ($data['kilometrage']) {
-                $vehicle = Vehicle::find($data['vehicle_id']);
-                if ($vehicle && $data['kilometrage'] > $vehicle->kilometrage_actuel) {
-                    $vehicle->update(['kilometrage_actuel' => $data['kilometrage']]);
-                }
-            }
 
             session()->flash('status', 'Intervention enregistrée.');
         }
