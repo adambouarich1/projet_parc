@@ -58,7 +58,7 @@ class FuelEntries extends Component
             'entries' => $entries,
             'vehicles' => Vehicle::orderBy('immatriculation')->get(),
             'drivers' => Driver::orderBy('nom')->get(),
-            'missions' => MissionOrder::where('statut', 'en_cours')->get(),
+            'missions' => MissionOrder::where('statut', 'validé')->get(),
             'stats' => $stats,
         ]);
     }

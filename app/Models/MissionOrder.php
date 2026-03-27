@@ -27,7 +27,7 @@ class MissionOrder extends Model
         self::STATUT_REJETE => 'Rejeté',
         self::STATUT_EN_COURS => 'En cours',
         self::STATUT_CLOTURE => 'Clôturé',
-        self::STATUT_ANNULE => 'Annulé',
+        self::STATUT_ANNULE => 'Annule',
         self::STATUT_ARCHIVE => 'Archivé',
         self::STATUT_ARCHIVE => 'Archivé',
     ];

@@ -46,7 +46,14 @@ class MissionOrders extends Component
             ->when($this->filters['search'], fn($q, $v) => $q->where(function($query) use ($v) {
                 $query->where('reference', 'like', "%{$v}%")
                     ->orWhere('objet', 'like', "%{$v}%")
-                    ->orWhere('destination', 'like', "%{$v}%");
+                    ->orWhere('destination', 'like', "%{$v}%")
+                    ->orWhereHas('driver', fn($q) => $q
+                        ->where('nom', 'like', "%{$v}%")
+                        ->orWhere('prenom', 'like', "%{$v}%")
+                    )
+                    ->orWhereHas('vehicle', fn($q) => $q
+                        ->where('marque', 'like', "%{$v}%")
+                    );
             }))
             ->latest()
             ->paginate(10);
