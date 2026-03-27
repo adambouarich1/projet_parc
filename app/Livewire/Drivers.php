@@ -37,6 +37,7 @@ class Drivers extends Component
     // Tableaux associatifs pour corriger la validation et l'affichage
     public array $statuts = [
         'Disponible' => 'Disponible',
+        'En mission' => 'En mission',
         'En congé' => 'En congé',
         'Maladie' => 'Maladie',
         'Non disponible' => 'Non disponible'

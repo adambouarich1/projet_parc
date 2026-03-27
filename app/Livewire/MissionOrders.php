@@ -239,7 +239,7 @@ class MissionOrders extends Component
         ]);
 
         // Mettre le conducteur en indisponible
-        $mission->driver->update(['statut_actuel' => 'Non disponible']);
+        $mission->driver->update(['statut_actuel' => 'En mission']);
 
         session()->flash('status', 'Mission démarrée.');
     }

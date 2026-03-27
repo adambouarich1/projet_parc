@@ -1,0 +1,100 @@
+{
+  "marques": [
+    {
+      "nom": "Dacia",
+      "modeles": ["Sandero", "Logan", "Duster", "Lodgy", "Dokker", "Spring"]
+    },
+    {
+      "nom": "Renault",
+      "modeles": ["Clio", "Megane", "Captur", "Kadjar", "Talisman", "Koleos", "Kangoo", "Trafic", "Master"]
+    },
+    {
+      "nom": "Peugeot",
+      "modeles": ["208", "2008", "308", "3008", "508", "5008", "Partner", "Expert", "Boxer"]
+    },
+    {
+      "nom": "Citroën",
+      "modeles": ["C3", "C4", "C5 Aircross", "Berlingo", "Jumpy", "Jumper", "C-Elysée"]
+    },
+    {
+      "nom": "Volkswagen",
+      "modeles": ["Polo", "Golf", "Tiguan", "T-Roc", "Passat", "Touareg", "Caddy", "Transporter", "Crafter"]
+    },
+    {
+      "nom": "Toyota",
+      "modeles": ["Yaris", "Corolla", "C-HR", "RAV4", "Land Cruiser", "Hilux", "Proace"]
+    },
+    {
+      "nom": "Hyundai",
+      "modeles": ["i10", "i20", "Accent", "Elantra", "Tucson", "Santa Fe", "Kona", "H1"]
+    },
+    {
+      "nom": "Kia",
+      "modeles": ["Picanto", "Rio", "Ceed", "Sportage", "Sorento", "Stonic", "Seltos"]
+    },
+    {
+      "nom": "Nissan",
+      "modeles": ["Micra", "Juke", "Qashqai", "X-Trail", "Navara", "Patrol", "NV200", "NV400"]
+    },
+    {
+      "nom": "Ford",
+      "modeles": ["Fiesta", "Focus", "Puma", "Kuga", "Ranger", "Transit", "Transit Custom"]
+    },
+    {
+      "nom": "Mercedes-Benz",
+      "modeles": ["Classe A", "Classe C", "Classe E", "Classe S", "GLA", "GLC", "GLE", "GLS", "Sprinter", "Vito"]
+    },
+    {
+      "nom": "BMW",
+      "modeles": ["Série 1", "Série 3", "Série 5", "Série 7", "X1", "X3", "X5", "X6"]
+    },
+    {
+      "nom": "Audi",
+      "modeles": ["A1", "A3", "A4", "A6", "Q2", "Q3", "Q5", "Q7", "Q8"]
+    },
+    {
+      "nom": "Seat",
+      "modeles": ["Ibiza", "Leon", "Arona", "Ateca", "Tarraco"]
+    },
+    {
+      "nom": "Fiat",
+      "modeles": ["500", "Panda", "Tipo", "Doblo", "Ducato"]
+    },
+    {
+      "nom": "Opel",
+      "modeles": ["Corsa", "Astra", "Crossland", "Grandland", "Combo", "Vivaro", "Movano"]
+    },
+    {
+      "nom": "Skoda",
+      "modeles": ["Fabia", "Scala", "Octavia", "Superb", "Kamiq", "Karoq", "Kodiaq"]
+    },
+    {
+      "nom": "Suzuki",
+      "modeles": ["Celerio", "Swift", "Baleno", "Vitara", "S-Cross", "Jimny"]
+    },
+    {
+      "nom": "Mitsubishi",
+      "modeles": ["Space Star", "ASX", "Eclipse Cross", "Outlander", "L200"]
+    },
+    {
+      "nom": "Mazda",
+      "modeles": ["Mazda2", "Mazda3", "Mazda6", "CX-3", "CX-5", "CX-30", "CX-60"]
+    },
+    {
+      "nom": "Isuzu",
+      "modeles": ["D-Max"]
+    },
+    {
+      "nom": "Jeep",
+      "modeles": ["Renegade", "Compass", "Cherokee", "Grand Cherokee", "Wrangler"]
+    },
+    {
+      "nom": "Land Rover",
+      "modeles": ["Defender", "Discovery", "Range Rover", "Range Rover Sport", "Range Rover Evoque"]
+    },
+    {
+      "nom": "Volvo",
+      "modeles": ["XC40", "XC60", "XC90", "S60", "V60", "V90"]
+    }
+  ]
+}

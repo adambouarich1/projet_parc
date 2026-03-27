@@ -182,18 +182,101 @@
                                 @error('form.immatriculation') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
 
-                            {{-- Marque --}}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-400 mb-1">Marque *</label>
-                                <input type="text" wire:model="form.marque" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
-                                @error('form.marque') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                            </div>
-
-                            {{-- Modèle --}}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-400 mb-1">Modèle *</label>
-                                <input type="text" wire:model="form.modele" class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
-                                @error('form.modele') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            <div x-data="{
+                                marqueSelect: @entangle('form.marque'),
+                                modeleSelect: @entangle('form.modele'),
+                                showMarqueManuelle: false,
+                                showModeleManuel: false,
+                                modelesDisponibles: {{ $modeles->toJson() }},
+                                
+                                get modelesFiltres() {
+                                    if (!this.marqueSelect || this.marqueSelect === 'Autre') {
+                                        return [];
+                                    }
+                                    // Trouver l'ID de la marque sélectionnée
+                                    let marqueObj = {{ $marques->toJson() }}.find(m => m.nom === this.marqueSelect);
+                                    if (!marqueObj) return [];
+                                    
+                                    // Filtrer les modèles
+                                    return this.modelesDisponibles.filter(m => m.marque_id === marqueObj.id);
+                                },
+                                
+                                onMarqueChange() {
+                                    if (this.marqueSelect === 'Autre') {
+                                        this.showMarqueManuelle = true;
+                                        this.showModeleManuel = true;
+                                        this.modeleSelect = '';
+                                    } else {
+                                        this.showMarqueManuelle = false;
+                                        this.showModeleManuel = false;
+                                        this.modeleSelect = ''; // Reset modèle quand marque change
+                                    }
+                                },
+                                
+                                onModeleChange() {
+                                    if (this.modeleSelect === 'Autre') {
+                                        this.showModeleManuel = true;
+                                    } else {
+                                        this.showModeleManuel = false;
+                                    }
+                                }
+                            }" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                                {{-- Marque (Liste déroulante) --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">Marque *</label>
+                                    <select 
+                                        x-model="marqueSelect" 
+                                        @change="onMarqueChange()"
+                                        x-show="!showMarqueManuelle"
+                                        class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                        <option value="">-- Sélectionner --</option>
+                                        @foreach($marques as $marque)
+                                            <option value="{{ $marque->nom }}">{{ $marque->nom }}</option>
+                                        @endforeach
+                                        <option value="Autre">🔧 Autre (saisie manuelle)</option>
+                                    </select>
+                                    
+                                    {{-- Champ manuel si "Autre" sélectionné --}}
+                                    <input 
+                                        type="text" 
+                                        x-show="showMarqueManuelle"
+                                        x-model="marqueSelect"
+                                        placeholder="Ex: Ferrari"
+                                        class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                        
+                                    @error('form.marque') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            
+                                {{-- Modèle (Liste déroulante filtrée OU manuel) --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">Modèle *</label>
+                                    
+                                    {{-- Liste déroulante filtrée si marque normale --}}
+                                    <select 
+                                        x-model="modeleSelect"
+                                        @change="onModeleChange()"
+                                        x-show="!showModeleManuel && marqueSelect && marqueSelect !== 'Autre'"
+                                        class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                        <option value="">-- Sélectionner --</option>
+                                        <template x-for="modele in modelesFiltres" :key="modele.id">
+                                            <option :value="modele.nom" x-text="modele.nom"></option>
+                                        </template>
+                                        <option value="Autre">🔧 Autre (saisie manuelle)</option>
+                                    </select>
+                                    
+                                    {{-- Champ manuel --}}
+                                    <input 
+                                        type="text" 
+                                        x-show="showModeleManuel || marqueSelect === 'Autre'"
+                                        x-model="modeleSelect"
+                                        placeholder="Ex: F40"
+                                        class="w-full bg-gray-700 text-white border-gray-600 rounded-lg focus:ring-purple-500 focus:border-purple-500">
+                                        
+                                    <p x-show="!marqueSelect" class="text-xs text-gray-500 mt-1">Sélectionnez d'abord une marque</p>
+                                    @error('form.modele') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            
                             </div>
 
                             {{-- Catégorie --}}

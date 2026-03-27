@@ -1,49 +1,51 @@
 <?php
-
+ 
 namespace App\Livewire;
-
+ 
 use App\Http\Requests\VehicleRequest;
 use App\Models\Vehicle;
+use App\Models\Marque;
+use App\Models\Modele;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
-
+ 
 class Vehicles extends Component
 {
     use WithPagination;
     use WithFileUploads;
-
+ 
     public $search = '';
-
+ 
     public array $filters = [
         'service_affecte' => '',
         'categorie_vehicule' => '',
         'carburant' => '',
         'statut_actuel' => '',
     ];
-
+ 
     public array $form = [];
-
+ 
     public ?int $editingId = null;
     public ?string $currentImagePath = null;
     public $image;
     public ?Vehicle $detailVehicle = null;
-
+ 
     public bool $showFormModal = false;
     public bool $showDetailsModal = false;
-
-    // CORRECTION ICI : Utilisation de tableaux associatifs [Clé => Valeur]
-    // Cela garantit que la valeur envoyée au serveur est bien le texte (ex: "Essence") 
-    // et non l'index numérique (0, 1, 2...), ce qui corrige l'erreur de validation.
+ 
+    // Pour la cascade marque → modèles
+    public $selectedMarque = null;
+ 
     public array $carburants = [
         'Essence' => 'Essence', 
         'Diesel' => 'Diesel', 
         'Electrique' => 'Electrique', 
         'Hybride' => 'Hybride'
     ];
-
+ 
     public array $categories = [
         'Léger' => 'Léger', 
         'Utilitaire' => 'Utilitaire', 
@@ -51,7 +53,7 @@ class Vehicles extends Component
         'Engin' => 'Engin', 
         'Autre' => 'Autre'
     ];
-
+ 
     public array $statuts = [
         'En service' => 'En service', 
         'En réparation' => 'En réparation', 
@@ -59,14 +61,14 @@ class Vehicles extends Component
         'Hors service' => 'Hors service', 
         'Réformé' => 'Réformé'
     ];
-
+ 
     protected $paginationTheme = 'tailwind';
-
+ 
     public function mount(): void
     {
         $this->resetForm();
     }
-
+ 
     public function render(): View
     {
         $vehicles = Vehicle::query()
@@ -80,17 +82,23 @@ class Vehicles extends Component
             ->when($this->filters['statut_actuel'], fn ($query, $value) => $query->where('statut_actuel', $value))
             ->latest()
             ->paginate(12);
-
+ 
+        // Récupérer les marques et modèles pour les listes déroulantes
+        $marques = Marque::orderBy('nom')->get();
+        $modeles = Modele::with('marque')->orderBy('nom')->get();
+ 
         return view('livewire.vehicles', [
             'vehicles' => $vehicles,
+            'marques' => $marques,
+            'modeles' => $modeles,
         ]);
     }
-
+ 
     public function updatingFilters(): void
     {
         $this->resetPage();
     }
-
+ 
     public function resetForm(): void
     {
         $this->form = [
@@ -109,8 +117,8 @@ class Vehicles extends Component
             'marque' => '',
             'modele' => '',
             'version' => '',
-            'categorie_vehicule' => '', // Sera 'Engin', 'Léger', etc.
-            'carburant' => '',          // Sera 'Essence', 'Diesel', etc.
+            'categorie_vehicule' => '',
+            'carburant' => '',
             'couleur' => '',
             'poids_vide' => null,
             'ptac' => null,
@@ -133,27 +141,27 @@ class Vehicles extends Component
             'valeur_nette_comptable' => null,
             'statut_actuel' => 'En service',
         ];
-
+ 
         $this->image = null;
         $this->editingId = null;
         $this->currentImagePath = null;
-        $this->resetValidation(); // Important pour effacer les erreurs rouges précédentes
+        $this->selectedMarque = null;
+        $this->resetValidation();
     }
-
+ 
     public function openCreate(): void
     {
         $this->resetForm();
         $this->showFormModal = true;
     }
-
+ 
     public function openEdit(int $vehicleId): void
     {
         $vehicle = Vehicle::findOrFail($vehicleId);
-
+ 
         $this->editingId = $vehicle->id;
         $this->currentImagePath = $vehicle->image_path;
         
-        // Remplissage du formulaire avec les données existantes
         $this->form = [
             'immatriculation' => $vehicle->immatriculation,
             'vin' => $vehicle->vin,
@@ -194,26 +202,24 @@ class Vehicles extends Component
             'valeur_nette_comptable' => $vehicle->valeur_nette_comptable,
             'statut_actuel' => $vehicle->statut_actuel,
         ];
-
+ 
         $this->image = null;
         $this->showFormModal = true;
     }
-
+ 
     public function openDetails(int $vehicleId): void
     {
         $this->detailVehicle = Vehicle::findOrFail($vehicleId);
         $this->showDetailsModal = true;
     }
-
+ 
     public function save(): void
     {
         $this->normalizeForm();
         
-        // Validation des données
         $validated = $this->validate($this->validationRules());
         $payload = $validated['form'];
-
-        // Gestion de l'upload d'image
+ 
         if ($this->image) {
             if ($this->currentImagePath) {
                 Storage::disk('public')->delete($this->currentImagePath);
@@ -222,8 +228,7 @@ class Vehicles extends Component
         } elseif ($this->currentImagePath) {
             $payload['image_path'] = $this->currentImagePath;
         }
-
-        // Création ou Mise à jour
+ 
         if ($this->editingId) {
             Vehicle::findOrFail($this->editingId)->update($payload);
             session()->flash('status', 'Véhicule mis à jour avec succès.');
@@ -231,48 +236,44 @@ class Vehicles extends Component
             Vehicle::create($payload);
             session()->flash('status', 'Véhicule créé avec succès.');
         }
-
-        // Nettoyage et fermeture
+ 
         $this->resetForm();
         $this->showFormModal = false;
         $this->showDetailsModal = false;
-        $this->resetPage(); // Revenir à la page 1 pour voir le nouvel élément
+        $this->resetPage();
     }
-
+ 
     public function deleteVehicle(int $vehicleId): void
     {
         $vehicle = Vehicle::findOrFail($vehicleId);
-
+ 
         if ($vehicle->image_path) {
             Storage::disk('public')->delete($vehicle->image_path);
         }
-
+ 
         $vehicle->delete();
-
+ 
         $this->resetPage();
         session()->flash('status', 'Véhicule supprimé.');
     }
-
+ 
     private function validationRules(): array
     {
         $rules = [];
-
-        // On suppose que VehicleRequest::baseRules renvoie un tableau ['immatriculation' => 'required', ...]
+ 
         foreach (VehicleRequest::baseRules($this->editingId) as $field => $rule) {
             if ($field === 'image') {
                 $rules['image'] = $rule;
                 continue;
             }
-            // On préfixe les champs par 'form.' car ils sont dans le tableau public $form
             $rules['form.' . $field] = $rule;
         }
-
+ 
         return $rules;
     }
-
+ 
     private function normalizeForm(): void
     {
-        // Convertit les chaînes vides en null pour éviter les erreurs SQL sur les champs nullables
         foreach ($this->form as $key => $value) {
             if ($value === '') {
                 $this->form[$key] = null;

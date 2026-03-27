@@ -58,6 +58,7 @@
             @php
                 $statutColors = [
                     'Disponible' => 'bg-green-900/80 text-green-200 border-green-700',
+                    'En mission' => 'bg-indigo-900/80 text-indigo-200 border-indigo-700',
                     'En congé' => 'bg-blue-900/80 text-blue-200 border-blue-700',
                     'Maladie' => 'bg-red-900/80 text-red-200 border-red-700',
                     'Non disponible' => 'bg-gray-900/80 text-gray-200 border-gray-700',
