@@ -70,6 +70,41 @@
         </div>
     </div>
  
+    {{-- Widget Prix de Référence (Admin only) --}}
+    @if(auth()->user()->role === 'admin')
+    <div class="bg-gray-800/60 rounded-2xl border border-amber-500/50 px-5 py-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Prix de référence
+            </h3>
+            <span class="text-xs text-amber-300/70">Visible admin uniquement</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center justify-between bg-gray-900/50 rounded-lg px-4 py-3 border border-gray-700/50">
+                <span class="text-gray-300 font-medium">Essence</span>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-white" style="font-size:20px;">{{ number_format($prixEssence, 2, ',', ' ') }}</span>
+                    <span class="text-sm text-gray-400">DH/L</span>
+                    <button wire:click="openEditPrix('essence')" class="ml-2 p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center justify-between bg-gray-900/50 rounded-lg px-4 py-3 border border-gray-700/50">
+                <span class="text-gray-300 font-medium">Diesel</span>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-white" style="font-size:20px;">{{ number_format($prixDiesel, 2, ',', ' ') }}</span>
+                    <span class="text-sm text-gray-400">DH/L</span>
+                    <button wire:click="openEditPrix('diesel')" class="ml-2 p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+ 
     <div class="flex flex-col lg:flex-row gap-5 items-start">
  
         {{-- ── Sidebar filtres ── --}}
@@ -123,15 +158,12 @@
  
                     {{-- ── Ligne 1 : date + véhicule + immat ── --}}
                     <div class="flex flex-wrap items-center gap-3 mb-2">
-                        {{-- Date — info primaire 23px --}}
                         <span class="font-bold text-white leading-tight" style="font-size:23px;">
                             {{ $entry->date_plein->format('d/m/Y') }}
                         </span>
-                        {{-- Immat badge --}}
                         <span class="font-mono font-bold text-emerald-300 bg-emerald-500/15 px-3 py-1 rounded-md border border-emerald-500/25 shrink-0 leading-tight" style="font-size:23px;">
                             {{ $entry->vehicle->immatriculation }}
                         </span>
-                        {{-- Marque modèle --}}
                         <span class="text-gray-400 font-medium" style="font-size:18px;">
                             {{ $entry->vehicle->marque }} {{ $entry->vehicle->modele }}
                         </span>
@@ -155,7 +187,6 @@
                     <div class="mb-4"></div>
                     @endif
  
-                    {{-- Séparateur --}}
                     <div class="border-t border-gray-700/40 mb-4"></div>
  
                     {{-- ── Ligne 3 : blocs infos + actions ── --}}
@@ -249,7 +280,9 @@
         </div>
     </div>
  
-    {{-- ── Modal Formulaire ── --}}
+    {{-- ══════════════════════════════════════════════════ --}}
+    {{-- ── Modal Formulaire (FIX : affichage réactif) ── --}}
+    {{-- ══════════════════════════════════════════════════ --}}
     @if($showFormModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" x-data x-transition.opacity>
         <div class="fixed inset-0 bg-gray-950/75 backdrop-blur-sm" wire:click="$set('showFormModal', false)"></div>
@@ -262,6 +295,7 @@
             </div>
             <div class="overflow-y-auto p-6 custom-scrollbar">
                 <form wire:submit.prevent="save" class="space-y-5" id="fuel-form">
+                    {{-- Véhicule et Conducteur --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
                             <label class="text-xs font-semibold text-gray-300">Véhicule <span class="text-rose-500">*</span></label>
@@ -284,6 +318,7 @@
                         </div>
                     </div>
  
+                    {{-- Date du plein --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-1.5">
                             <label class="text-xs font-semibold text-gray-300">Date du plein <span class="text-rose-500">*</span></label>
@@ -292,38 +327,85 @@
                         </div>
                     </div>
  
+                    {{-- Montant / Prix unitaire / Quantité --}}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        {{-- 1. Montant (seul champ éditable) --}}
                         <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Quantité (L) <span class="text-rose-500">*</span></label>
-                            <input type="number" step="0.01" wire:model.live="form.quantite_litres" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
-                            @error('form.quantite_litres') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                            <label class="text-xs font-semibold text-gray-300">Montant (DH) <span class="text-rose-500">*</span></label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                wire:model.live.debounce.500ms="form.montant_total" 
+                                class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all" 
+                                placeholder="Ex: 500">
+                            @error('form.montant_total') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
+ 
+                        {{-- 2. Prix unitaire (AFFICHAGE DIRECT au lieu de wire:model readonly) --}}
                         <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Prix unitaire (DH/L) <span class="text-rose-500">*</span></label>
-                            <input type="number" step="0.01" wire:model.live="form.prix_unitaire" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                            <label class="text-xs font-semibold text-gray-400">Prix unitaire (DH/L)</label>
+                            <div class="w-full rounded-lg border border-gray-700/40 bg-gray-700/40 text-white text-sm px-3 py-2 font-semibold min-h-[38px] flex items-center">
+                                @if(!empty($form['prix_unitaire']))
+                                    {{ number_format((float) $form['prix_unitaire'], 2, ',', ' ') }}
+                                @else
+                                    <span class="text-gray-500">—</span>
+                                @endif
+                            </div>
+                            {{-- Hidden input pour que la valeur soit soumise avec le form --}}
+                            <input type="hidden" wire:model="form.prix_unitaire">
+                            @if(!empty($form['prix_unitaire']))
+                                <p class="text-xs text-emerald-400">✓ Auto-rempli</p>
+                            @endif
                             @error('form.prix_unitaire') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
                         </div>
+ 
+                        {{-- 3. Quantité (AFFICHAGE DIRECT au lieu de wire:model readonly) --}}
                         <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-400">Montant total (DH)</label>
-                            <input type="number" step="0.01" wire:model="form.montant_total" readonly class="w-full rounded-lg border border-gray-700/40 bg-gray-700/40 text-gray-300 text-sm cursor-not-allowed">
+                            <label class="text-xs font-semibold text-gray-400">Quantité (L)</label>
+                            <div class="w-full rounded-lg border border-gray-700/40 bg-gray-700/40 text-white text-sm px-3 py-2 font-semibold min-h-[38px] flex items-center">
+                                @if(!empty($form['quantite_litres']))
+                                    {{ number_format((float) $form['quantite_litres'], 2, ',', ' ') }}
+                                @else
+                                    <span class="text-gray-500">—</span>
+                                @endif
+                            </div>
+                            <input type="hidden" wire:model="form.quantite_litres">
+                            @if(!empty($form['quantite_litres']))
+                                <p class="text-xs text-emerald-400">✓ Calculé auto</p>
+                            @endif
                         </div>
                     </div>
  
+                    {{-- Station / Type carburant / N° Bon --}}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div class="space-y-1.5">
                             <label class="text-xs font-semibold text-gray-300">Station</label>
                             <input type="text" wire:model="form.station" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-gray-600" placeholder="Ex: Afriquia">
                         </div>
+                        
+                        {{-- Type carburant (AFFICHAGE DIRECT) --}}
                         <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-gray-300">Type carburant</label>
-                            <input type="text" wire:model="form.type_carburant" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-gray-600" placeholder="Ex: Diesel">
+                            <label class="text-xs font-semibold text-gray-400">Type carburant</label>
+                            <div class="w-full rounded-lg border border-gray-700/40 bg-gray-700/40 text-white text-sm px-3 py-2 font-semibold min-h-[38px] flex items-center capitalize">
+                                @if(!empty($form['type_carburant']))
+                                    {{ $form['type_carburant'] }}
+                                @else
+                                    <span class="text-gray-500">—</span>
+                                @endif
+                            </div>
+                            <input type="hidden" wire:model="form.type_carburant">
+                            @if(!empty($form['type_carburant']))
+                                <p class="text-xs text-emerald-400">✓ Auto-rempli</p>
+                            @endif
                         </div>
+                        
                         <div class="space-y-1.5">
                             <label class="text-xs font-semibold text-gray-300">N° Bon</label>
                             <input type="text" wire:model="form.numero_bon" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
                         </div>
                     </div>
  
+                    {{-- Ordre de mission --}}
                     <div class="space-y-1.5">
                         <label class="text-xs font-semibold text-gray-300">Ordre de mission lié</label>
                         <select wire:model="form.mission_order_id" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
@@ -334,6 +416,7 @@
                         </select>
                     </div>
  
+                    {{-- Observations --}}
                     <div class="space-y-1.5">
                         <label class="text-xs font-semibold text-gray-300">Observations</label>
                         <textarea wire:model="form.observations" rows="2" class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-gray-600" placeholder="Remarques éventuelles..."></textarea>
@@ -368,7 +451,6 @@
             </div>
             <div class="overflow-y-auto p-6 space-y-4 custom-scrollbar">
  
-                {{-- Véhicule + conducteur --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50 flex items-start gap-3">
                         <div class="p-2 bg-emerald-500/15 rounded-lg text-emerald-400 shrink-0 border border-emerald-500/20">
@@ -393,7 +475,6 @@
                     @endif
                 </div>
  
-                {{-- Chiffres clés --}}
                 <div class="grid grid-cols-3 gap-4">
                     <div class="bg-indigo-500/10 rounded-xl p-4 border border-indigo-500/20 text-center">
                         <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Quantité</p>
@@ -425,7 +506,6 @@
                     </div>
                 </div>
  
-                {{-- Détails --}}
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50">
                         <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Prix unitaire</p>
@@ -481,6 +561,41 @@
                     </div>
                 </div>
  
+            </div>
+        </div>
+    </div>
+    @endif
+ 
+    {{-- ── Modal Édition Prix ── --}}
+    @if($showPrixModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-gray-950/75 backdrop-blur-sm" wire:click="$set('showPrixModal', false)"></div>
+        <div class="bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full border border-amber-500/50 relative z-10">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-800/60">
+                <h3 class="text-lg font-bold text-white capitalize">Modifier le prix {{ $editingPrixType }}</h3>
+                <button wire:click="$set('showPrixModal', false)" class="text-gray-500 hover:text-gray-300 p-1.5 rounded-lg hover:bg-gray-800 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <form wire:submit.prevent="savePrix">
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-semibold text-gray-300">Prix unitaire (DH/L)</label>
+                        <input 
+                            type="number" 
+                            step="0.01" 
+                            wire:model="editingPrixValue" 
+                            class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-lg font-bold focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                            placeholder="Ex: 13.50">
+                        @error('editingPrixValue') <p class="text-xs text-rose-400 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" wire:click="$set('showPrixModal', false)" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 border border-gray-700/50 transition-colors">Annuler</button>
+                        <button type="submit" class="px-5 py-2 text-sm font-semibold rounded-lg bg-amber-600 text-white hover:bg-amber-500 shadow-lg shadow-amber-500/20 transition-all">
+                            Enregistrer
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
