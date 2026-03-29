@@ -157,9 +157,7 @@
                         <div class="pl-5 pr-5 py-4">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-11 h-11 bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl flex items-center justify-center text-white font-bold shrink-0">
-                                        {{ strtoupper(substr($vehicle->marque ?? 'V', 0, 1)) }}
-                                    </div>
+                                    <x-marque-logo :marque="$vehicle->marque" size="lg" />
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <span class="font-mono font-bold text-rose-300 bg-rose-500/15 px-2.5 py-0.5 rounded-md border border-rose-500/25" style="font-size:18px;">
@@ -255,6 +253,7 @@
  
                             {{-- Ligne 1 : Véhicule + année + badge --}}
                             <div class="flex flex-wrap items-center gap-3 mb-2">
+                                <x-marque-logo :marque="$vehicle->marque" size="lg" />
                                 <span class="font-mono font-bold text-emerald-300 bg-emerald-500/15 px-3 py-1 rounded-md border border-emerald-500/25 shrink-0 leading-tight" style="font-size:23px;">
                                     {{ $vehicle->immatriculation }}
                                 </span>

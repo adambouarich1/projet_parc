@@ -28,14 +28,18 @@ class Alerts extends Component
     public bool $showTraitementModal = false;
     public string $notesTraitement = '';
     public ?int $alertToTreat = null;
+    public string $viewMode = 'pending'; // pending | treated | all
+    public string $verificationError = '';
 
     protected $paginationTheme = 'tailwind';
 
     public function render(): View
     {
-        $alerts = Alert::query()
+        $query = Alert::query()
             ->with(['alertable', 'treatedBy'])
-            ->nonArchive()
+            ->when($this->viewMode === 'pending', fn($q) => $q->nonArchive())
+            ->when($this->viewMode === 'treated', fn($q) => $q->where('statut', 'traitee'))
+            ->when($this->viewMode === 'all', fn($q) => $q->whereIn('statut', ['active', 'vue', 'traitee']))
             ->when($this->filters['type'], fn($q, $v) => $q->where('type', $v))
             ->when($this->filters['priorite'], fn($q, $v) => $q->where('priorite', $v))
             ->when($this->filters['statut'], fn($q, $v) => $q->where('statut', $v))
@@ -47,23 +51,37 @@ class Alerts extends Component
                 }
             })
             ->orderByRaw("FIELD(priorite, 'critique', 'haute', 'moyenne', 'basse')")
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->orderBy('created_at', 'desc');
+
+        $allAlerts = $query->get();
+
+        $grouped = [
+            'critique' => $allAlerts->where('priorite', 'critique')->values(),
+            'haute'    => $allAlerts->where('priorite', 'haute')->values(),
+            'moyenne'  => $allAlerts->where('priorite', 'moyenne')->values(),
+            'basse'    => $allAlerts->where('priorite', 'basse')->values(),
+        ];
 
         $stats = [
-            'total' => Alert::count(),
-            'actives' => Alert::active()->count(),
-            'critiques' => Alert::critique()->active()->count(),
-            'hautes' => Alert::where('priorite', Alert::PRIORITE_HAUTE)->active()->count(),
+            'total'    => Alert::nonArchive()->whereIn('statut', ['active', 'vue'])->count(),
+            'critiques' => Alert::where('priorite', 'critique')->whereIn('statut', ['active', 'vue'])->count(),
+            'hautes'   => Alert::where('priorite', 'haute')->whereIn('statut', ['active', 'vue'])->count(),
+            'moyennes' => Alert::where('priorite', 'moyenne')->whereIn('statut', ['active', 'vue'])->count(),
+            'basses'   => Alert::where('priorite', 'basse')->whereIn('statut', ['active', 'vue'])->count(),
         ];
 
         return view('livewire.alerts', [
-            'alerts' => $alerts,
-            'types' => Alert::TYPES,
+            'grouped'  => $grouped,
+            'types'    => Alert::TYPES,
             'priorites' => Alert::PRIORITES,
-            'statuts' => Alert::STATUTS,
-            'stats' => $stats,
+            'statuts'  => Alert::STATUTS,
+            'stats'    => $stats,
         ]);
+    }
+
+    public function setViewMode(string $mode): void
+    {
+        $this->viewMode = in_array($mode, ['pending', 'treated', 'all']) ? $mode : 'pending';
     }
 
     public function updatingFilters(): void
@@ -75,9 +93,9 @@ class Alerts extends Component
     {
         $service = new AlertService();
         $result = $service->generateAllAlerts();
-        
+
         $total = $result['drivers'] + $result['vehicles'] + $result['interventions'];
-        
+
         if ($total > 0) {
             session()->flash('status', "{$total} nouvelle(s) alerte(s) générée(s).");
         } else {
@@ -87,12 +105,13 @@ class Alerts extends Component
 
     public function openDetails(int $id): void
     {
-        $this->detailAlert = Alert::with(['alertable', 'treatedBy'])->findOrFail($id);
+        $this->detailAlert = Alert::with(['alertable', 'treatedBy', 'viewedBy'])->findOrFail($id);
         $this->showDetailsModal = true;
 
         if ($this->detailAlert->statut === Alert::STATUT_ACTIVE) {
             $service = new AlertService();
-            $service->markAsViewed($this->detailAlert);
+            $service->markAsViewed($this->detailAlert, auth()->id());
+            $this->detailAlert->refresh()->load(['alertable', 'treatedBy', 'viewedBy']);
         }
     }
 
@@ -104,6 +123,16 @@ class Alerts extends Component
 
     public function openTraitement(int $id): void
     {
+        $alert = Alert::with('alertable')->findOrFail($id);
+        $service = new AlertService();
+        $result = $service->verifyTreatment($alert);
+
+        if (!$result['ok']) {
+            $this->verificationError = $result['message'];
+            return;
+        }
+
+        $this->verificationError = '';
         $this->alertToTreat = $id;
         $this->notesTraitement = '';
         $this->showTraitementModal = true;
@@ -114,6 +143,7 @@ class Alerts extends Component
         $this->showTraitementModal = false;
         $this->alertToTreat = null;
         $this->notesTraitement = '';
+        $this->verificationError = '';
     }
 
     public function markAsTreated(): void
@@ -128,6 +158,15 @@ class Alerts extends Component
         $this->closeTraitement();
     }
 
+    public function markAsViewedById(int $id): void
+    {
+        $alert = Alert::findOrFail($id);
+        $service = new AlertService();
+        $service->markAsViewed($alert, auth()->id());
+
+        session()->flash('status', 'Alerte marquée comme vue.');
+    }
+
     public function ignoreAlert(int $id): void
     {
         $alert = Alert::findOrFail($id);
@@ -137,10 +176,11 @@ class Alerts extends Component
         session()->flash('status', 'Alerte ignorée.');
     }
 
-    public function markAllAsViewed(): void
+    public function archiveAlert(int $id): void
     {
-        Alert::where('statut', Alert::STATUT_ACTIVE)->update(['statut' => Alert::STATUT_VUE]);
-        session()->flash('status', 'Toutes les alertes marquées comme vues.');
+        $alert = Alert::findOrFail($id);
+        $alert->update(['statut' => Alert::STATUT_ARCHIVEE]);
+        session()->flash('status', 'Alerte archivée.');
     }
 
     public function getEntityName(?object $alertable): string
@@ -156,6 +196,14 @@ class Alerts extends Component
         }
 
         return 'N/A';
+    }
+
+    public function getEntityMarque(?object $alertable): string
+    {
+        if ($alertable instanceof Vehicle) {
+            return $alertable->marque ?? '';
+        }
+        return '';
     }
 
     public function getEntityType(?string $type): string

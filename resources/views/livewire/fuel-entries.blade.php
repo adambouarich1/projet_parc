@@ -156,16 +156,17 @@
  
                 <div class="pl-5 pr-5 py-5">
  
-                    {{-- ── Ligne 1 : date + véhicule + immat ── --}}
+                    {{-- ── Ligne 1 : logo + immat + véhicule ... date à droite ── --}}
                     <div class="flex flex-wrap items-center gap-3 mb-2">
-                        <span class="font-bold text-white leading-tight" style="font-size:23px;">
-                            {{ $entry->date_plein->format('d/m/Y') }}
-                        </span>
+                        <x-marque-logo :marque="$entry->vehicle->marque" size="lg" />
                         <span class="font-mono font-bold text-emerald-300 bg-emerald-500/15 px-3 py-1 rounded-md border border-emerald-500/25 shrink-0 leading-tight" style="font-size:23px;">
                             {{ $entry->vehicle->immatriculation }}
                         </span>
                         <span class="text-gray-400 font-medium" style="font-size:18px;">
                             {{ $entry->vehicle->marque }} {{ $entry->vehicle->modele }}
+                        </span>
+                        <span class="ml-auto font-bold text-white leading-tight" style="font-size:23px;">
+                            {{ $entry->date_plein->format('d/m/Y') }}
                         </span>
                     </div>
  

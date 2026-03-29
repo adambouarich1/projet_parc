@@ -54,12 +54,14 @@ class Alert extends Model
     public const STATUT_VUE = 'vue';
     public const STATUT_TRAITEE = 'traitee';
     public const STATUT_IGNOREE = 'ignoree';
+    public const STATUT_ARCHIVEE = 'archivee';
 
     public const STATUTS = [
         self::STATUT_ACTIVE => 'Active',
         self::STATUT_VUE => 'Vue',
         self::STATUT_TRAITEE => 'Traitée',
         self::STATUT_IGNOREE => 'Ignorée',
+        self::STATUT_ARCHIVEE => 'Archivée',
     ];
 
     protected $fillable = [
@@ -75,11 +77,14 @@ class Alert extends Model
         'treated_by',
         'treated_at',
         'notes_traitement',
+        'viewed_by',
+        'viewed_at',
     ];
 
     protected $casts = [
         'date_echeance' => 'date',
         'treated_at' => 'datetime',
+        'viewed_at' => 'datetime',
     ];
 
     // Relations
@@ -91,6 +96,11 @@ class Alert extends Model
     public function treatedBy()
     {
         return $this->belongsTo(User::class, 'treated_by');
+    }
+
+    public function viewedBy()
+    {
+        return $this->belongsTo(User::class, 'viewed_by');
     }
 
     // Accesseurs
@@ -131,7 +141,7 @@ class Alert extends Model
     }
 public function scopeArchive($query)
 {
-    return $query->whereIn('statut', [self::STATUT_TRAITEE, self::STATUT_IGNOREE]);
+    return $query->whereIn('statut', [self::STATUT_TRAITEE, self::STATUT_IGNOREE, self::STATUT_ARCHIVEE]);
 }
 
 public function scopeNonArchive($query)

@@ -223,6 +223,82 @@ class AlertService
         return 1;
     }
 
+    /**
+     * Vérifie que le problème sous-jacent est réellement résolu avant de marquer comme traitée.
+     * Retourne ['ok' => bool, 'message' => string]
+     */
+    public function verifyTreatment(Alert $alert): array
+    {
+        $alertable = $alert->alertable;
+
+        if (!$alertable) {
+            return ['ok' => true, 'message' => ''];
+        }
+
+        return match($alert->type) {
+            Alert::TYPE_ASSURANCE_EXPIREE,
+            Alert::TYPE_ASSURANCE_BIENTOT  => $this->verifyAssurance($alertable),
+
+            Alert::TYPE_VIGNETTE_EXPIREE,
+            Alert::TYPE_VIGNETTE_BIENTOT   => $this->verifyVignette($alertable),
+
+            Alert::TYPE_CT_EXPIRE,
+            Alert::TYPE_CT_BIENTOT         => $this->verifyCT($alertable),
+
+            Alert::TYPE_PERMIS_EXPIRE,
+            Alert::TYPE_PERMIS_BIENTOT     => $this->verifyPermis($alertable),
+
+            default => ['ok' => true, 'message' => ''],
+        };
+    }
+
+    private function verifyAssurance(object $vehicle): array
+    {
+        $valid = Insurance::where('vehicle_id', $vehicle->id)
+            ->where('statut', 'active')
+            ->where('date_expiration', '>=', Carbon::today()->toDateString())
+            ->exists();
+
+        return $valid
+            ? ['ok' => true, 'message' => '']
+            : ['ok' => false, 'message' => "Aucune assurance valide détectée pour {$vehicle->immatriculation}. Veuillez d'abord enregistrer une assurance active."];
+    }
+
+    private function verifyVignette(object $vehicle): array
+    {
+        $valid = Vignette::where('vehicle_id', $vehicle->id)
+            ->where('statut', 'active')
+            ->where('date_expiration', '>=', Carbon::today()->toDateString())
+            ->exists();
+
+        return $valid
+            ? ['ok' => true, 'message' => '']
+            : ['ok' => false, 'message' => "Aucune vignette valide détectée pour {$vehicle->immatriculation}. Veuillez d'abord enregistrer une vignette active."];
+    }
+
+    private function verifyCT(object $vehicle): array
+    {
+        $valid = Intervention::where('vehicle_id', $vehicle->id)
+            ->where('type', 'controle_technique')
+            ->whereNotNull('date_expiration_ct')
+            ->where('date_expiration_ct', '>=', Carbon::today()->toDateString())
+            ->exists();
+
+        return $valid
+            ? ['ok' => true, 'message' => '']
+            : ['ok' => false, 'message' => "Aucun contrôle technique valide détecté pour {$vehicle->immatriculation}. Veuillez d'abord enregistrer un CT à jour."];
+    }
+
+    private function verifyPermis(object $driver): array
+    {
+        $valid = $driver->date_expiration
+            && Carbon::parse($driver->date_expiration)->gte(Carbon::today());
+
+        return $valid
+            ? ['ok' => true, 'message' => '']
+            : ['ok' => false, 'message' => "Le permis de {$driver->nom} {$driver->prenom} est toujours expiré ou non renseigné. Veuillez d'abord mettre à jour la date d'expiration."];
+    }
+
     public function markAsTreated(Alert $alert, int $userId, ?string $notes = null): void
     {
         $alert->update([
@@ -233,10 +309,14 @@ class AlertService
         ]);
     }
 
-    public function markAsViewed(Alert $alert): void
+    public function markAsViewed(Alert $alert, ?int $userId = null): void
     {
         if ($alert->statut === Alert::STATUT_ACTIVE) {
-            $alert->update(['statut' => Alert::STATUT_VUE]);
+            $alert->update([
+                'statut'    => Alert::STATUT_VUE,
+                'viewed_by' => $userId,
+                'viewed_at' => now(),
+            ]);
         }
     }
 
