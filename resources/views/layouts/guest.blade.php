@@ -14,23 +14,36 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-100 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-950">
-            <div>
-                <a href="/" class="flex flex-col items-center gap-2">
-                    <div class="h-16 w-16 bg-indigo-600 rounded-xl flex items-center justify-center">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
-                        </svg>
-                    </div>
-                    <span class="text-xl font-bold text-gray-100">Parc Auto</span>
-                </a>
+    <body class="font-sans antialiased">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0" style="background-color: #006233;">
+
+            {{-- Bande décorative rouge en haut --}}
+            <div class="fixed top-0 left-0 right-0 h-1" style="background-color: #C1272D;"></div>
+
+            {{-- Logo / En-tête --}}
+            <div class="mb-6 flex flex-col items-center gap-3">
+                {{-- Étoile marocaine --}}
+                <div class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg" style="background-color: rgba(255,255,255,0.15);">
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="50,5 61,35 95,35 67,57 78,90 50,70 22,90 33,57 5,35 39,35"
+                                 fill="none" stroke="#C8A951" stroke-width="6"/>
+                    </svg>
+                </div>
+
+                <div class="text-center">
+                    <h1 class="text-xl font-bold text-white">Commune Urbaine</h1>
+                    <p class="text-sm font-medium" style="color: rgba(255,255,255,0.75);">Gestion du Parc Automobile</p>
+                </div>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-6 bg-gray-900 border border-gray-800 shadow-xl overflow-hidden sm:rounded-xl">
+            {{-- Card login --}}
+            <div class="w-full sm:max-w-md px-6 py-7 bg-white shadow-2xl overflow-hidden sm:rounded-2xl border-t-4" style="border-top-color: #C1272D;">
                 {{ $slot }}
             </div>
+
+            <p class="mt-6 text-xs text-center" style="color: rgba(255,255,255,0.5);">
+                Royaume du Maroc — Ministère de l'Intérieur
+            </p>
         </div>
     </body>
 </html>

@@ -45,11 +45,11 @@
 @endphp
  
 @if($logoExists)
-    <div class="{{ $sizeClass }} rounded-xl bg-gray-800 border border-gray-700/50 flex items-center justify-center shrink-0 overflow-hidden" @if($containerStyle) style="{{ $containerStyle }}" @endif>
+    <div class="{{ $sizeClass }} rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0 overflow-hidden" @if($containerStyle) style="{{ $containerStyle }}" @endif>
         <img src="{{ asset($logoPath) }}" alt="{{ $marque }}" class="{{ $imgSizeClass }} object-contain" @if($imgStyle) style="{{ $imgStyle }}" @endif>
     </div>
 @else
-    <div class="{{ $sizeClass }} bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold shrink-0" @if($containerStyle) style="{{ $containerStyle }}" @endif>
+    <div class="{{ $sizeClass }} rounded-xl flex items-center justify-center text-white font-bold shrink-0" style="background-color: #006233;" @if($containerStyle) style="{{ $containerStyle }}" @endif>
         {{ strtoupper(substr($marque ?: 'V', 0, 1)) }}
     </div>
 @endif

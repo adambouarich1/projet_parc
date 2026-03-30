@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        background-color: #f8fafc;
+    }
+}
+
+@layer components {
+    /* Sidebar active state */
+    .nav-active {
+        background-color: #006233;
+        color: #ffffff;
+    }
+
+    /* Morocco green button */
+    .btn-maroc {
+        @apply bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-lg transition;
+    }
+
+    /* Card style */
+    .card-maroc {
+        @apply bg-white rounded-2xl border border-gray-200 shadow-sm;
+    }
+
+    /* Badge styles */
+    .badge-critique {
+        @apply bg-red-50 text-red-700 border border-red-200;
+    }
+    .badge-haute {
+        @apply bg-orange-50 text-orange-700 border border-orange-200;
+    }
+    .badge-moyenne {
+        @apply bg-amber-50 text-amber-700 border border-amber-200;
+    }
+    .badge-basse {
+        @apply bg-gray-100 text-gray-600 border border-gray-300;
+    }
+}

@@ -1,10 +1,10 @@
 <?php
     $roleBadges = [
-        'admin' => 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-        'responsable_parc' => 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
-        'valideur' => 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-        'agent_saisie' => 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-        'consultation' => 'bg-gray-700/50 text-gray-300 border-gray-600/50',
+        'admin' => 'bg-red-50 text-red-700 border-red-200',
+        'responsable_parc' => 'bg-green-50 text-green-700 border-green-200',
+        'valideur' => 'bg-amber-50 text-amber-700 border-amber-200',
+        'agent_saisie' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'consultation' => 'bg-gray-100 text-gray-800 border-gray-300',
     ];
  
     $prioriteConfig = [
@@ -16,7 +16,7 @@
             'bg' => 'bg-rose-950/30',
             'hoverBorder' => 'hover:border-rose-500/50',
             'band' => 'bg-rose-500',
-            'countBg' => 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+            'countBg' => 'bg-red-50 text-red-700 border-red-200',
             'titleColor' => 'text-rose-400',
         ],
         'haute' => [
@@ -27,7 +27,7 @@
             'bg' => 'bg-orange-950/20',
             'hoverBorder' => 'hover:border-orange-500/50',
             'band' => 'bg-orange-500',
-            'countBg' => 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+            'countBg' => 'bg-orange-50 text-orange-700 border-orange-200',
             'titleColor' => 'text-orange-400',
         ],
         'moyenne' => [
@@ -38,7 +38,7 @@
             'bg' => 'bg-amber-950/15',
             'hoverBorder' => 'hover:border-amber-500/40',
             'band' => 'bg-amber-500',
-            'countBg' => 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+            'countBg' => 'bg-amber-50 text-amber-700 border-amber-200',
             'titleColor' => 'text-amber-400',
         ],
         'basse' => [
@@ -46,10 +46,10 @@
             'dot' => 'bg-emerald-500',
             'dot2' => 'bg-emerald-400',
             'border' => 'border-emerald-500/30',
-            'bg' => 'bg-gray-800/60',
+            'bg' => 'bg-white',
             'hoverBorder' => 'hover:border-emerald-500/40',
             'band' => 'bg-emerald-500',
-            'countBg' => 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+            'countBg' => 'bg-green-50 text-green-700 border-green-200',
             'titleColor' => 'text-emerald-400',
         ],
     ];
@@ -79,43 +79,43 @@
         'vidange_date' => 'bg-orange-500/20 text-orange-300',
         'vignette_expiree' => 'bg-rose-500/20 text-rose-300',
         'vignette_bientot' => 'bg-amber-500/20 text-amber-300',
-        'autre' => 'bg-gray-600/30 text-gray-300',
+        'autre' => 'bg-gray-600/30 text-gray-800',
     ];
 ?>
  
-<div class="space-y-5 text-gray-100 font-sans">
+<div class="space-y-5 text-gray-900 font-sans">
  
     {{-- ── Header ── --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-            <h2 class="text-2xl font-bold text-white tracking-tight">Centre d'alertes</h2>
+            <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Centre d'alertes</h2>
             <p class="text-sm mt-0.5">
-                <span class="{{ $stats['total'] > 0 ? 'text-amber-400 font-semibold' : 'text-gray-400' }}">{{ $stats['total'] }} alerte(s) en attente</span>
+                <span class="{{ $stats['total'] > 0 ? 'text-amber-400 font-semibold' : 'text-gray-800' }}">{{ $stats['total'] }} alerte(s) en attente</span>
             </p>
         </div>
         <div class="flex items-center gap-3 flex-wrap">
             {{-- Toggle vues --}}
             <button wire:click="setViewMode('pending')"
                 class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-200
-                    {{ $viewMode === 'pending' ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-gray-700/60 text-gray-300 border-gray-600/40 hover:bg-gray-600/70' }}">
+                    {{ $viewMode === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-gray-700/60 text-gray-800 border-gray-300 hover:bg-gray-600/70' }}">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 En attente
             </button>
             <button wire:click="setViewMode('treated')"
                 class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-200
-                    {{ $viewMode === 'treated' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-gray-700/60 text-gray-300 border-gray-600/40 hover:bg-gray-600/70' }}">
+                    {{ $viewMode === 'treated' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-700/60 text-gray-800 border-gray-300 hover:bg-gray-600/70' }}">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Traitées
             </button>
             <button wire:click="setViewMode('all')"
                 class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg border transition-all duration-200
-                    {{ $viewMode === 'all' ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' : 'bg-gray-700/60 text-gray-300 border-gray-600/40 hover:bg-gray-600/70' }}">
+                    {{ $viewMode === 'all' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-700/60 text-gray-800 border-gray-300 hover:bg-gray-600/70' }}">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                 Tout voir
             </button>
             {{-- Filtres type --}}
             <select wire:model.live="filters.type"
-                class="px-3 py-2 rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all appearance-none">
+                class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-200 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all appearance-none">
                 <option value="">Tous les types</option>
                 @foreach($types as $key => $label)
                     <option value="{{ $key }}">{{ $label }}</option>
@@ -124,7 +124,7 @@
  
             @if(auth()->user()->canEdit())
                 <button wire:click="refreshAlerts" wire:loading.attr="disabled"
-                    class="inline-flex items-center px-4 py-2.5 bg-gray-700/60 hover:bg-gray-600/70 border border-gray-600/40 text-gray-200 text-sm font-semibold rounded-lg transition-all">
+                    class="inline-flex items-center px-4 py-2.5 bg-gray-700/60 hover:bg-gray-600/70 border border-gray-300 text-gray-200 text-sm font-semibold rounded-lg transition-all">
                     <svg wire:loading.remove wire:target="refreshAlerts" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     <svg wire:loading wire:target="refreshAlerts" class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     Actualiser
@@ -135,7 +135,7 @@
  
     {{-- Flash succès --}}
     @if (session()->has('status'))
-        <div class="flex items-center gap-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-4 py-3">
+        <div class="flex items-center gap-3 rounded-xl bg-green-50 border border-green-300 text-green-700 px-4 py-3">
             <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <p class="text-sm font-medium">{{ session('status') }}</p>
         </div>
@@ -220,26 +220,26 @@
  
                         {{-- Ligne 1 : badge type + date --}}
                         <div class="flex items-center justify-between">
-                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg {{ $typeBadgeColors[$alert->type] ?? 'bg-gray-600/30 text-gray-300' }}">
+                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg {{ $typeBadgeColors[$alert->type] ?? 'bg-gray-600/30 text-gray-800' }}">
                                 {{ $typeLabels[$alert->type] ?? $alert->type_label }}
                             </span>
-                            <span class="text-xs text-gray-500">{{ $alert->created_at->format('Y-m-d') }}</span>
+                            <span class="text-xs text-gray-700">{{ $alert->created_at->format('Y-m-d') }}</span>
                         </div>
  
                         {{-- Ligne 2 : titre --}}
-                        <p class="font-semibold text-white leading-snug" style="font-size:16px;">
+                        <p class="font-semibold text-gray-900 leading-snug" style="font-size:16px;">
                             {{ $alert->titre }}
                         </p>
  
                         {{-- Ligne 3 : entité (logo + nom) --}}
-                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                        <div class="flex items-center gap-2 text-sm text-gray-700">
                             @if($isVehicle && $alert->alertable)
                                 <x-marque-logo :marque="$this->getEntityMarque($alert->alertable)" size="lg" />
                                 <span>{{ $alert->alertable->marque }} {{ $alert->alertable->modele }}</span>
-                                <span class="text-gray-600">—</span>
-                                <span class="font-mono text-gray-300">{{ $alert->alertable->immatriculation }}</span>
+                                <span class="text-gray-800">—</span>
+                                <span class="font-mono text-gray-800">{{ $alert->alertable->immatriculation }}</span>
                             @elseif($alert->alertable)
-                                <svg class="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                <svg class="w-5 h-5 text-gray-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 <span>{{ $this->getEntityName($alert->alertable) }}</span>
                             @endif
                         </div>
@@ -268,7 +268,7 @@
                                 </button>
                             @endif
                             <button wire:click="openDetails({{ $alert->id }})"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all">
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-700/15 text-green-700 border border-indigo-500/30 hover:bg-green-700/25 transition-all">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 Détails
                             </button>
@@ -284,12 +284,12 @@
     @endforeach
  
     @if(!$hasAnyAlert)
-        <div class="flex flex-col items-center justify-center py-20 bg-gray-800/40 rounded-2xl border border-gray-700/50">
-            <svg class="w-16 h-16 mb-4 opacity-15 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p class="text-lg font-semibold text-gray-400">
+        <div class="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border border-gray-200">
+            <svg class="w-16 h-16 mb-4 opacity-15 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="text-lg font-semibold text-gray-800">
                 {{ $viewMode === 'treated' ? 'Aucune alerte traitée.' : ($viewMode === 'all' ? 'Aucune alerte.' : 'Aucune alerte en attente.') }}
             </p>
-            <p class="text-sm mt-1 text-gray-600">
+            <p class="text-sm mt-1 text-gray-800">
                 {{ $viewMode === 'pending' ? 'Cliquez sur "Actualiser" pour scanner le système.' : 'Les alertes correspondantes apparaîtront ici.' }}
             </p>
         </div>
@@ -300,11 +300,11 @@
     {{-- ══════════════════════════════════════════ --}}
     @if($showDetailsModal && $detailAlert)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <div class="fixed inset-0 bg-gray-950/75 backdrop-blur-sm" wire:click="closeDetails"></div>
-        <div class="bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full border border-gray-700/80 relative z-10 flex flex-col max-h-[90vh]">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-800/60 shrink-0">
-                <h3 class="text-lg font-bold text-white">Détails de l'alerte</h3>
-                <button wire:click="closeDetails" class="text-gray-500 hover:text-gray-300 p-1.5 rounded-lg hover:bg-gray-800 transition-colors shrink-0">
+        <div class="fixed inset-0 bg-gray-50/75 backdrop-blur-sm" wire:click="closeDetails"></div>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200/80 relative z-10 flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200/60 shrink-0">
+                <h3 class="text-lg font-bold text-gray-900">Détails de l'alerte</h3>
+                <button wire:click="closeDetails" class="text-gray-700 hover:text-gray-800 p-1.5 rounded-lg hover:bg-gray-50 transition-colors shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -312,7 +312,7 @@
  
                 {{-- Type + priorité + statut --}}
                 <div class="flex flex-wrap gap-2">
-                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg {{ $typeBadgeColors[$detailAlert->type] ?? 'bg-gray-600/30 text-gray-300' }}">
+                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg {{ $typeBadgeColors[$detailAlert->type] ?? 'bg-gray-600/30 text-gray-800' }}">
                         {{ $typeLabels[$detailAlert->type] ?? $detailAlert->type_label }}
                     </span>
                     <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg
@@ -327,47 +327,47 @@
                         @if($detailAlert->statut === 'active') bg-rose-500/20 text-rose-300
                         @elseif($detailAlert->statut === 'vue') bg-amber-500/20 text-amber-300
                         @elseif($detailAlert->statut === 'traitee') bg-emerald-500/20 text-emerald-300
-                        @else bg-gray-600/30 text-gray-400
+                        @else bg-gray-600/30 text-gray-800
                         @endif">
                         {{ $detailAlert->statut_label }}
                     </span>
                 </div>
  
                 {{-- Titre --}}
-                <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Titre</p>
-                    <p class="font-semibold text-gray-100">{{ $detailAlert->titre }}</p>
+                <div class="bg-white rounded-xl p-4 border border-gray-200">
+                    <p class="text-[10px] font-bold text-gray-700 uppercase tracking-widest mb-1">Titre</p>
+                    <p class="font-semibold text-gray-900">{{ $detailAlert->titre }}</p>
                 </div>
  
                 @if($detailAlert->message)
-                <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Message</p>
-                    <p class="text-gray-300 text-sm">{{ $detailAlert->message }}</p>
+                <div class="bg-white rounded-xl p-4 border border-gray-200">
+                    <p class="text-[10px] font-bold text-gray-700 uppercase tracking-widest mb-1">Message</p>
+                    <p class="text-gray-800 text-sm">{{ $detailAlert->message }}</p>
                 </div>
                 @endif
  
                 {{-- Entité --}}
-                <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50 flex items-start gap-3">
+                <div class="bg-white rounded-xl p-4 border border-gray-200 flex items-start gap-3">
                     @php $isVehicleDetail = str_contains($detailAlert->alertable_type ?? '', 'Vehicle'); @endphp
                     @if($isVehicleDetail && $detailAlert->alertable)
                         <x-marque-logo :marque="$this->getEntityMarque($detailAlert->alertable)" size="lg" />
                     @else
-                        <div class="p-2 bg-indigo-500/15 rounded-lg text-indigo-400 shrink-0 border border-indigo-500/20">
+                        <div class="p-2 bg-green-700/15 rounded-lg text-green-700 shrink-0 border border-indigo-500/20">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         </div>
                     @endif
                     <div>
-                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Entité concernée</p>
-                        <p class="font-semibold text-gray-100">{{ $this->getEntityName($detailAlert->alertable) }}</p>
-                        <p class="text-sm text-gray-400">{{ $this->getEntityType($detailAlert->alertable_type) }}</p>
+                        <p class="text-[10px] font-bold text-gray-700 uppercase tracking-widest mb-0.5">Entité concernée</p>
+                        <p class="font-semibold text-gray-900">{{ $this->getEntityName($detailAlert->alertable) }}</p>
+                        <p class="text-sm text-gray-700">{{ $this->getEntityType($detailAlert->alertable_type) }}</p>
                     </div>
                 </div>
  
                 {{-- Échéance --}}
                 @if($detailAlert->date_echeance)
                 @php $jd = $detailAlert->jours_restants; $exp = $jd !== null && $jd < 0; @endphp
-                <div class="rounded-xl p-4 border {{ $exp ? 'bg-rose-500/10 border-rose-500/20' : ($jd <= 7 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-gray-800/60 border-gray-700/50') }}">
-                    <p class="text-[10px] font-bold uppercase tracking-widest mb-1 {{ $exp ? 'text-rose-400' : ($jd <= 7 ? 'text-amber-400' : 'text-gray-500') }}">Date d'échéance</p>
+                <div class="rounded-xl p-4 border {{ $exp ? 'bg-rose-500/10 border-rose-500/20' : ($jd <= 7 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-white border-gray-200') }}">
+                    <p class="text-[10px] font-bold uppercase tracking-widest mb-1 {{ $exp ? 'text-rose-400' : ($jd <= 7 ? 'text-amber-400' : 'text-gray-700') }}">Date d'échéance</p>
                     <p class="font-semibold {{ $exp ? 'text-rose-300' : ($jd <= 7 ? 'text-amber-300' : 'text-gray-200') }}">{{ $detailAlert->date_echeance->format('d/m/Y') }}</p>
                     @if($jd !== null)
                         <p class="text-sm mt-0.5 {{ $exp ? 'text-rose-400' : 'text-amber-400' }}">
@@ -393,14 +393,14 @@
                     <p class="font-semibold text-emerald-300">{{ $detailAlert->treatedBy->name }}</p>
                     <p class="text-sm text-emerald-400/70">{{ $detailAlert->treated_at?->format('d/m/Y H:i') }}</p>
                     @if($detailAlert->notes_traitement)
-                        <p class="mt-2 text-sm text-gray-300 border-t border-emerald-500/20 pt-2">{{ $detailAlert->notes_traitement }}</p>
+                        <p class="mt-2 text-sm text-gray-800 border-t border-emerald-500/20 pt-2">{{ $detailAlert->notes_traitement }}</p>
                     @endif
                 </div>
                 @endif
  
-                <div class="bg-gray-800/60 rounded-xl p-4 border border-gray-700/50">
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Créée le</p>
-                    <p class="text-sm text-gray-300">{{ $detailAlert->created_at->format('d/m/Y H:i') }}</p>
+                <div class="bg-white rounded-xl p-4 border border-gray-200">
+                    <p class="text-[10px] font-bold text-gray-700 uppercase tracking-widest mb-1">Créée le</p>
+                    <p class="text-sm text-gray-800">{{ $detailAlert->created_at->format('d/m/Y H:i') }}</p>
                 </div>
  
             </div>
@@ -413,26 +413,26 @@
     {{-- ══════════════════════════════════════════ --}}
     @if($showTraitementModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="fixed inset-0 bg-gray-950/75 backdrop-blur-sm" wire:click="closeTraitement"></div>
-        <div class="bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full border border-gray-700/80 relative z-10">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-800/60">
+        <div class="fixed inset-0 bg-gray-50/75 backdrop-blur-sm" wire:click="closeTraitement"></div>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200/80 relative z-10">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200/60">
                 <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <h3 class="text-lg font-bold text-white">Marquer comme traitée</h3>
+                    <h3 class="text-lg font-bold text-gray-900">Marquer comme traitée</h3>
                 </div>
-                <button wire:click="closeTraitement" class="text-gray-500 hover:text-gray-300 p-1.5 rounded-lg hover:bg-gray-800 transition-colors">
+                <button wire:click="closeTraitement" class="text-gray-700 hover:text-gray-800 p-1.5 rounded-lg hover:bg-gray-50 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <div class="p-6 space-y-5">
                 <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-gray-300">Notes <span class="text-gray-500 font-normal">(optionnel)</span></label>
+                    <label class="text-xs font-semibold text-gray-800">Notes <span class="text-gray-700 font-normal">(optionnel)</span></label>
                     <textarea wire:model="notesTraitement" rows="3"
-                        class="w-full rounded-lg border border-gray-600/60 bg-gray-800/60 text-gray-100 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-gray-600"
+                        class="w-full rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-gray-600"
                         placeholder="Décrivez les actions effectuées..."></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-1">
-                    <button wire:click="closeTraitement" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-gray-800 border border-gray-700/50 transition-colors">Annuler</button>
+                    <button wire:click="closeTraitement" class="px-4 py-2 text-sm font-medium rounded-lg text-gray-800 hover:bg-gray-50 border border-gray-200 transition-colors">Annuler</button>
                     <button wire:click="markAsTreated" class="px-5 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/20 transition-all">
                         Confirmer le traitement
                     </button>

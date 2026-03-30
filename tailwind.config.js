@@ -15,6 +15,16 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                maroc: {
+                    vert: '#006233',
+                    'vert-fonce': '#004d28',
+                    'vert-clair': '#e8f5ee',
+                    rouge: '#C1272D',
+                    'rouge-clair': '#fde8e9',
+                    or: '#C8A951',
+                },
+            },
         },
     },
 

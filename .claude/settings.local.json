@@ -4,7 +4,14 @@
       "Bash(php artisan:*)",
       "Bash(1:*)",
       "Bash(php -r \":*)",
-      "Bash(\"c:/Laravel/projet_parc/resources/views/livewire/archives.blade.php\")"
+      "Bash(\"c:/Laravel/projet_parc/resources/views/livewire/archives.blade.php\")",
+      "Bash(find /c/Laravel/projet_parc -type f \\\\\\(-name *.css -o -name *.scss -o -name *.blade.php -o -name tailwind.config.js -o -name vite.config.js -o -name webpack.mix.js -o -name package.json \\\\\\))",
+      "Bash(find /c/Laravel/projet_parc/resources -type f \\\\\\(-name *.blade.php -o -name *.css -o -name *.js \\\\\\))",
+      "Bash(find /c/Laravel/projet_parc/public -name *.css)",
+      "Bash(python3 fix_theme.py)",
+      "Bash(php fix_theme.php)",
+      "Bash(npm run:*)",
+      "Bash(php fix_text_contrast.php)"
     ]
   }
 }
