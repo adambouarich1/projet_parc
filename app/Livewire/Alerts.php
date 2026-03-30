@@ -154,6 +154,10 @@ class Alerts extends Component
         $service = new AlertService();
         $service->markAsTreated($alert, auth()->id(), $this->notesTraitement ?: null);
 
+        if ($alert->created_at->startOfMonth()->lt(now()->startOfMonth())) {
+            $alert->update(['statut' => Alert::STATUT_ARCHIVEE, 'archived_at' => now()]);
+        }
+
         session()->flash('status', 'Alerte marquée comme traitée.');
         $this->closeTraitement();
     }
@@ -165,15 +169,6 @@ class Alerts extends Component
         $service->markAsViewed($alert, auth()->id());
 
         session()->flash('status', 'Alerte marquée comme vue.');
-    }
-
-    public function ignoreAlert(int $id): void
-    {
-        $alert = Alert::findOrFail($id);
-        $service = new AlertService();
-        $service->ignore($alert, auth()->id());
-
-        session()->flash('status', 'Alerte ignorée.');
     }
 
     public function archiveAlert(int $id): void

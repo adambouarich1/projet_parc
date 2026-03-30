@@ -1,22 +1,26 @@
 <?php
     $statutColors = [
-        'brouillon' => 'bg-gray-500/10 text-gray-300 border-gray-500/20',
-        'en_attente' => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-        'valide' => 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-        'rejete' => 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-        'en_cours' => 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
-        'cloture' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-        'annule' => 'bg-gray-700/50 text-gray-400 border-gray-600/50',
+        'brouillon'        => 'bg-gray-500/10 text-gray-300 border-gray-500/20',
+        'en_attente'       => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        'valide'           => 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+        'rejete'           => 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+        'en_cours'         => 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+        'depart_anticipe'  => 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+        'termine_attente'  => 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+        'cloture'          => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+        'annule'           => 'bg-gray-700/50 text-gray-400 border-gray-600/50',
     ];
- 
+
     $statutBand = [
-        'brouillon' => 'bg-gray-500',
-        'en_attente' => 'bg-amber-500',
-        'valide' => 'bg-blue-500',
-        'rejete' => 'bg-rose-500',
-        'en_cours' => 'bg-indigo-500',
-        'cloture' => 'bg-emerald-500',
-        'annule' => 'bg-gray-600',
+        'brouillon'        => 'bg-gray-500',
+        'en_attente'       => 'bg-amber-500',
+        'valide'           => 'bg-blue-500',
+        'rejete'           => 'bg-rose-500',
+        'en_cours'         => 'bg-indigo-500',
+        'depart_anticipe'  => 'bg-orange-500',
+        'termine_attente'  => 'bg-yellow-500',
+        'cloture'          => 'bg-emerald-500',
+        'annule'           => 'bg-gray-600',
     ];
  
     $roleBadges = [
@@ -86,14 +90,63 @@
                         <p class="text-[10px] text-gray-600 mt-1.5 leading-tight">Réf. mission · Objet · Conducteur · Marque véhicule</p>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-gray-400 block mb-1.5">Statut</label>
-                        <select wire:model.live="filters.statut"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-600/60 bg-gray-900/60 text-gray-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all appearance-none">
-                            <option value="">Tous les statuts</option>
-                            @foreach ($statuts as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <label class="text-xs font-semibold text-gray-400 block mb-2">Statut</label>
+                        <div class="flex flex-col gap-2">
+
+                            {{-- Tout voir --}}
+                            <button type="button" wire:click="$set('filters.statut', 'tout_voir')"
+                                class="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold border transition-all
+                                    {{ $filters['statut'] === 'tout_voir'
+                                        ? 'bg-white/10 text-white border-white/30'
+                                        : 'bg-gray-900/40 text-gray-400 border-gray-700/40 hover:bg-gray-700/40 hover:text-gray-200' }}">
+                                Tout voir
+                            </button>
+
+                            {{-- Statuts principaux --}}
+                            <div class="flex flex-col gap-1.5 pt-1">
+                                @foreach ([
+                                    'en_attente' => ['label' => 'En attente',  'active' => 'bg-amber-500/20 text-amber-200 border-amber-500/40',    'inactive' => 'hover:bg-amber-500/10 hover:text-amber-300'],
+                                    'valide'     => ['label' => 'Validé',      'active' => 'bg-blue-500/20 text-blue-200 border-blue-500/40',       'inactive' => 'hover:bg-blue-500/10 hover:text-blue-300'],
+                                    'en_cours'   => ['label' => 'En cours',    'active' => 'bg-indigo-500/20 text-indigo-200 border-indigo-500/40', 'inactive' => 'hover:bg-indigo-500/10 hover:text-indigo-300'],
+                                ] as $key => $cfg)
+                                <button type="button" wire:click="$set('filters.statut', '{{ $key }}')"
+                                    class="w-full text-left px-3 py-2 rounded-lg text-sm font-bold border transition-all
+                                        {{ $filters['statut'] === $key
+                                            ? $cfg['active']
+                                            : 'bg-gray-900/40 text-gray-300 border-gray-700/40 ' . $cfg['inactive'] }}">
+                                    {{ $cfg['label'] }}
+                                </button>
+                                @endforeach
+                            </div>
+
+                            {{-- Autres statuts (accordéon) --}}
+                            <div class="pt-1" x-data="{ open: {{ in_array($filters['statut'], ['brouillon','rejete','depart_anticipe','termine_attente','cloture','annule']) ? 'true' : 'false' }} }">
+                                <button type="button" @click="open = !open"
+                                    class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg border transition-all bg-gray-900/40 border-gray-700/40 hover:bg-gray-700/40">
+                                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Autres statuts</span>
+                                    <svg class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div x-show="open" x-transition class="flex flex-col gap-1 mt-1.5">
+                                    @foreach ([
+                                        'brouillon'       => ['label' => 'Brouillon',                      'active' => 'bg-gray-500/20 text-gray-200 border-gray-500/40',        'inactive' => 'hover:bg-gray-500/10 hover:text-gray-300'],
+                                        'rejete'          => ['label' => 'Rejeté',                         'active' => 'bg-rose-500/20 text-rose-200 border-rose-500/40',         'inactive' => 'hover:bg-rose-500/10 hover:text-rose-300'],
+                                        'depart_anticipe' => ['label' => 'Départ anticipé',                'active' => 'bg-orange-500/20 text-orange-200 border-orange-500/40',   'inactive' => 'hover:bg-orange-500/10 hover:text-orange-300'],
+                                        'termine_attente' => ['label' => 'Terminé, attente clôturation',   'active' => 'bg-yellow-500/20 text-yellow-200 border-yellow-500/40',   'inactive' => 'hover:bg-yellow-500/10 hover:text-yellow-300'],
+                                        'cloture'         => ['label' => 'Clôturé',                        'active' => 'bg-emerald-500/20 text-emerald-200 border-emerald-500/40','inactive' => 'hover:bg-emerald-500/10 hover:text-emerald-300'],
+                                        'annule'          => ['label' => 'Annulé',                         'active' => 'bg-gray-700/60 text-gray-300 border-gray-600/60',         'inactive' => 'hover:bg-gray-700/30 hover:text-gray-400'],
+                                    ] as $key => $cfg)
+                                    <button type="button" wire:click="$set('filters.statut', '{{ $key }}')"
+                                        class="w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all
+                                            {{ $filters['statut'] === $key
+                                                ? $cfg['active']
+                                                : 'bg-gray-900/40 text-gray-400 border-gray-700/40 ' . $cfg['inactive'] }}">
+                                        {{ $cfg['label'] }}
+                                    </button>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>
@@ -242,19 +295,19 @@
                                     <button wire:click="start({{ $mission->id }})"
                                         class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-blue-300 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 transition-all whitespace-nowrap">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        Démarrer
+                                        Départ anticipé
                                     </button>
                                 @endif
- 
-                                @if($mission->statut === 'en_cours')
+
+                                @if(in_array($mission->statut, ['en_cours', 'depart_anticipe', 'termine_attente']) && auth()->user()->canEdit())
                                     <button wire:click="closeModal({{ $mission->id }})"
                                         class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all whitespace-nowrap">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                         Clôturer
                                     </button>
                                 @endif
- 
-                                @if(!in_array($mission->statut, ['en_cours', 'cloture', 'annule']))
+
+                                @if(!in_array($mission->statut, ['en_cours', 'depart_anticipe', 'termine_attente', 'cloture', 'annule']))
                                     <button @click="window.dispatchEvent(new CustomEvent('delete-confirmation', { detail: { callback: () => $wire.cancel({{ $mission->id }}) } }))" type="button"
                                         class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-gray-400 bg-gray-700/40 hover:bg-gray-600/60 border border-gray-600/30 transition-all whitespace-nowrap">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
@@ -449,7 +502,7 @@
                     <p class="text-sm text-rose-200">{{ $detailMission->motif_rejet }}</p>
                 </div>
                 @endif
-                @if($detailMission->statut === 'en_cours' && auth()->user()->canEdit())
+                @if(in_array($detailMission->statut, ['en_cours', 'depart_anticipe', 'termine_attente']) && auth()->user()->canEdit())
                 <div class="bg-emerald-500/5 rounded-2xl p-5 border border-emerald-500/20 space-y-4">
                     <div class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

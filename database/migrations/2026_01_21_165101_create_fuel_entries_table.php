@@ -27,7 +27,8 @@ return new class extends Migration
             $table->string('numero_bon')->nullable();
             
             $table->text('observations')->nullable();
-            
+            $table->timestamp('archived_at')->nullable();
+
             $table->timestamps();
         });
     }

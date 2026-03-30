@@ -36,6 +36,7 @@ class FuelEntry extends Model
         'numero_bon',
         'observations',
         'statut',
+        'archived_at',
     ];
 
     protected $casts = [
@@ -43,6 +44,7 @@ class FuelEntry extends Model
         'quantite_litres' => 'decimal:2',
         'prix_unitaire' => 'decimal:2',
         'montant_total' => 'decimal:2',
+        'archived_at' => 'datetime',
     ];
 
     // Relations

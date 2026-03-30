@@ -53,10 +53,12 @@ return new class extends Migration
             $table->enum('resultat_ct', ['favorable', 'defavorable', 'contre_visite'])->nullable();
             
             // Statut
-            $table->enum('statut', ['planifie', 'en_cours', 'termine', 'annule'])->default('termine')->index();
+            $table->enum('statut', ['planifie', 'en_cours', 'termine', 'annule', 'archive'])->default('termine')->index();
             
             $table->text('observations')->nullable();
             
+            $table->timestamp('archived_at')->nullable();
+
             $table->timestamps();
         });
     }

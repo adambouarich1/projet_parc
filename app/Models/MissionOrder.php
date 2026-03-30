@@ -15,10 +15,11 @@ class MissionOrder extends Model
     public const STATUT_VALIDE = 'valide';
     public const STATUT_REJETE = 'rejete';
     public const STATUT_EN_COURS = 'en_cours';
+    public const STATUT_DEPART_ANTICIPE = 'depart_anticipe';
+    public const STATUT_TERMINE_ATTENTE = 'termine_attente';
     public const STATUT_CLOTURE = 'cloture';
     public const STATUT_ANNULE = 'annule';
     public const STATUT_ARCHIVE = 'archive';
-   
 
     public const STATUTS = [
         self::STATUT_BROUILLON => 'Brouillon',
@@ -26,9 +27,10 @@ class MissionOrder extends Model
         self::STATUT_VALIDE => 'Validé',
         self::STATUT_REJETE => 'Rejeté',
         self::STATUT_EN_COURS => 'En cours',
+        self::STATUT_DEPART_ANTICIPE => 'Départ anticipé',
+        self::STATUT_TERMINE_ATTENTE => 'Terminé, attente de clôturation',
         self::STATUT_CLOTURE => 'Clôturé',
-        self::STATUT_ANNULE => 'Annule',
-        self::STATUT_ARCHIVE => 'Archivé',
+        self::STATUT_ANNULE => 'Annulé',
         self::STATUT_ARCHIVE => 'Archivé',
     ];
 
@@ -53,6 +55,7 @@ class MissionOrder extends Model
         'validated_at',
         'started_at',
         'closed_at',
+        'archived_at',
     ];
 
     protected $casts = [
@@ -62,6 +65,7 @@ class MissionOrder extends Model
         'validated_at' => 'datetime',
         'started_at' => 'datetime',
         'closed_at' => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     // Génère une référence unique (ex: OM-2026-00001)
@@ -116,7 +120,11 @@ class MissionOrder extends Model
 
     public function canBeClosed(): bool
     {
-        return $this->statut === self::STATUT_EN_COURS;
+        return in_array($this->statut, [
+            self::STATUT_EN_COURS,
+            self::STATUT_DEPART_ANTICIPE,
+            self::STATUT_TERMINE_ATTENTE,
+        ]);
     }
 
     // Calcul des km parcourus

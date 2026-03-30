@@ -42,7 +42,8 @@ class MissionOrders extends Component
         $missions = MissionOrder::query()
             ->nonArchive()
             ->with(['user', 'vehicle', 'driver', 'validator'])
-            ->when($this->filters['statut'], fn($q, $v) => $q->where('statut', $v))
+            ->when($this->filters['statut'] === '', fn($q) => $q->where('statut', '!=', MissionOrder::STATUT_CLOTURE))
+            ->when($this->filters['statut'] !== '' && $this->filters['statut'] !== 'tout_voir', fn($q) => $q->where('statut', $this->filters['statut']))
             ->when($this->filters['search'], fn($q, $v) => $q->where(function($query) use ($v) {
                 $query->where('reference', 'like', "%{$v}%")
                     ->orWhere('objet', 'like', "%{$v}%")
@@ -189,6 +190,8 @@ class MissionOrders extends Component
             'validated_at' => now(),
         ]);
 
+        $mission->vehicle?->update(['statut_actuel' => 'Assigné pour mission']);
+
         session()->flash('status', 'Mission validée avec succès.');
     }
 
@@ -221,27 +224,26 @@ class MissionOrders extends Component
         session()->flash('status', 'Mission rejetée.');
     }
 
-    // Démarrer la mission
+    // Démarrer la mission manuellement (départ anticipé avant la date prévue)
     public function start(int $id): void
     {
         $mission = MissionOrder::findOrFail($id);
-        
+
         if (!$mission->canBeStarted()) {
             session()->flash('error', 'Cette mission ne peut pas être démarrée.');
             return;
         }
 
-        // Récupérer le km actuel du véhicule
         $mission->update([
-            'statut' => MissionOrder::STATUT_EN_COURS,
+            'statut'     => MissionOrder::STATUT_DEPART_ANTICIPE,
             'started_at' => now(),
-            'km_depart' => $mission->vehicle->kilometrage_actuel,
+            'km_depart'  => $mission->vehicle->kilometrage_actuel,
         ]);
 
-        // Mettre le conducteur en indisponible
+        $mission->vehicle->update(['statut_actuel' => 'En mission']);
         $mission->driver->update(['statut_actuel' => 'En mission']);
 
-        session()->flash('status', 'Mission démarrée.');
+        session()->flash('status', 'Mission démarrée en départ anticipé.');
     }
 
     // Clôturer la mission
@@ -266,16 +268,22 @@ class MissionOrders extends Component
             'form.km_retour' => 'required|integer|min:' . $mission->km_depart,
         ]);
 
+        $archiveNow = $mission->created_at->startOfMonth()->lt(now()->startOfMonth());
+
         $mission->update([
-            'statut' => MissionOrder::STATUT_CLOTURE,
-            'closed_at' => now(),
+            'statut'               => $archiveNow ? MissionOrder::STATUT_ARCHIVE : MissionOrder::STATUT_CLOTURE,
+            'closed_at'            => now(),
             'date_retour_effective' => now(),
-            'km_retour' => $this->form['km_retour'],
-            'observations' => $this->form['observations'] ?? null,
+            'km_retour'            => $this->form['km_retour'],
+            'observations'         => $this->form['observations'] ?? null,
+            'archived_at'          => $archiveNow ? now() : null,
         ]);
 
-        // Mettre à jour le km du véhicule
-        $mission->vehicle->update(['kilometrage_actuel' => $this->form['km_retour']]);
+        // Mettre à jour le km du véhicule et le remettre en service
+        $mission->vehicle->update([
+            'kilometrage_actuel' => $this->form['km_retour'],
+            'statut_actuel' => 'En service',
+        ]);
 
         // Remettre le conducteur disponible
         $mission->driver->update(['statut_actuel' => 'Disponible']);
@@ -287,11 +295,21 @@ class MissionOrders extends Component
     // Annuler
     public function cancel(int $id): void
     {
-        $mission = MissionOrder::findOrFail($id);
-        
-        if (in_array($mission->statut, [MissionOrder::STATUT_EN_COURS, MissionOrder::STATUT_CLOTURE])) {
+        $mission = MissionOrder::with('vehicle')->findOrFail($id);
+
+        if (in_array($mission->statut, [
+            MissionOrder::STATUT_EN_COURS,
+            MissionOrder::STATUT_DEPART_ANTICIPE,
+            MissionOrder::STATUT_TERMINE_ATTENTE,
+            MissionOrder::STATUT_CLOTURE,
+        ])) {
             session()->flash('error', 'Cette mission ne peut pas être annulée.');
             return;
+        }
+
+        // Si la mission était validée, libérer le véhicule
+        if ($mission->statut === MissionOrder::STATUT_VALIDE) {
+            $mission->vehicle?->update(['statut_actuel' => 'En service']);
         }
 
         $mission->update(['statut' => MissionOrder::STATUT_ANNULE]);

@@ -41,13 +41,14 @@ return new class extends Migration
             $table->integer('jours_restants')->nullable();
             
             // Statut
-            $table->enum('statut', ['active', 'vue', 'traitee', 'ignoree'])->default('active')->index();
+            $table->enum('statut', ['active', 'vue', 'traitee', 'archivee'])->default('active')->index();
             
             // Qui a traité
             $table->foreignId('treated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('treated_at')->nullable();
             $table->text('notes_traitement')->nullable();
-            
+            $table->timestamp('archived_at')->nullable();
+
             $table->timestamps();
         });
     }

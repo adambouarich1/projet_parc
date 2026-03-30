@@ -52,9 +52,9 @@ class FuelEntries extends Component
             ->paginate(15);
  
         $stats = [
-            'total_litres' => FuelEntry::sum('quantite_litres'),
-            'total_montant' => FuelEntry::sum('montant_total'),
-            'nb_pleins' => FuelEntry::count(),
+            'total_litres' => FuelEntry::nonArchive()->sum('quantite_litres'),
+            'total_montant' => FuelEntry::nonArchive()->sum('montant_total'),
+            'nb_pleins'     => FuelEntry::nonArchive()->count(),
         ];
  
         $prixEssence = PrixCarburantUnitaire::getPrix('essence');

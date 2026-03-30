@@ -2,12 +2,10 @@
 
 namespace App\Livewire;
 
-use App\Models\MissionOrder;
+use App\Models\Alert;
 use App\Models\FuelEntry;
 use App\Models\Intervention;
-use App\Models\Insurance;
-use App\Models\Alert;
-use App\Models\Vignette;
+use App\Models\MissionOrder;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,169 +16,151 @@ class Archives extends Component
 
     #[\Livewire\Attributes\Layout('layouts.app')]
 
-    public string $activeTab = 'missions';
-    public string $search = '';
+    public string $activeModule = 'missions';
+    public int    $selectedMonth;
+    public int    $selectedYear;
+    public ?int   $detailId = null;
 
     protected $paginationTheme = 'tailwind';
 
+    public function mount(): void
+    {
+        $this->selectedMonth = (int) now()->subMonth()->month;
+        $this->selectedYear  = (int) now()->subMonth()->year;
+    }
+
     public function render(): View
     {
-        $data = [];
+        $m = $this->selectedMonth;
+        $y = $this->selectedYear;
 
-        // Stats par type
-        $stats = [
-            'missions' => MissionOrder::archive()->count(),
-            'carburant' => FuelEntry::archive()->count(),
-            'interventions' => Intervention::archive()->count(),
-            'assurances' => Insurance::where('statut', 'archivee')->count(),
-            'alertes' => Alert::archive()->count(),
-            'vignettes' => Vignette::archive()->count(),
-        ];
+        $availablePeriods = $this->getAvailablePeriods();
+        $items            = $this->getItems($m, $y);
+        $kpis             = $this->getKpis($m, $y);
+        $detailItem       = $this->detailId ? $this->loadDetail($this->detailId) : null;
 
-        // Données selon l'onglet actif
-        switch ($this->activeTab) {
-            case 'missions':
-                $data['items'] = MissionOrder::archive()
-                    ->with(['vehicle', 'driver', 'user'])
-                    ->when($this->search, fn($q, $v) => $q->where(function($query) use ($v) {
-                        $query->where('reference', 'like', "%{$v}%")
-                              ->orWhere('objet', 'like', "%{$v}%")
-                              ->orWhere('destination', 'like', "%{$v}%");
-                    }))
-                    ->latest()
-                    ->paginate(10);
-                break;
-
-            case 'carburant':
-                $data['items'] = FuelEntry::archive()
-                    ->with(['vehicle', 'driver', 'user'])
-                    ->when($this->search, fn($q, $v) => $q->where(function($query) use ($v) {
-                        $query->where('station', 'like', "%{$v}%")
-                              ->orWhere('numero_bon', 'like', "%{$v}%")
-                              ->orWhereHas('vehicle', fn($q2) => $q2->where('immatriculation', 'like', "%{$v}%"));
-                    }))
-                    ->latest()
-                    ->paginate(10);
-                break;
-
-            case 'interventions':
-                $data['items'] = Intervention::archive()
-                    ->with(['vehicle', 'user'])
-                    ->when($this->search, fn($q, $v) => $q->where(function($query) use ($v) {
-                        $query->where('titre', 'like', "%{$v}%")
-                              ->orWhere('prestataire', 'like', "%{$v}%")
-                              ->orWhereHas('vehicle', fn($q2) => $q2->where('immatriculation', 'like', "%{$v}%"));
-                    }))
-                    ->latest()
-                    ->paginate(10);
-                break;
-
-            case 'assurances':
-                $data['items'] = Insurance::where('statut', 'archivee')
-                    ->with(['vehicle', 'user'])
-                    ->when($this->search, fn($q, $v) => $q->where(function($query) use ($v) {
-                        $query->where('assureur', 'like', "%{$v}%")
-                              ->orWhere('numero_police', 'like', "%{$v}%")
-                              ->orWhereHas('vehicle', fn($q2) => $q2->where('immatriculation', 'like', "%{$v}%"));
-                    }))
-                    ->latest()
-                    ->paginate(10);
-                break;
-
-            case 'alertes':
-                $data['items'] = Alert::archive()
-                    ->with(['alertable', 'treatedBy'])
-                    ->when($this->search, fn($q, $v) => $q->where(function($query) use ($v) {
-                        $query->where('titre', 'like', "%{$v}%")
-                              ->orWhere('message', 'like', "%{$v}%");
-                    }))
-                    ->latest()
-                    ->paginate(10);
-                break;
-                case 'vignettes':
-                $data['items'] = Vignette::archive()
-                    ->with(['vehicle', 'user'])
-                    ->when($this->search, fn($q, $v) => $q->where(function($query) use ($v) {
-                        $query->where('reference_paiement', 'like', "%{$v}%")
-                                ->orWhereHas('vehicle', fn($q2) => $q2->where('immatriculation', 'like', "%{$v}%"));
-                    }))
-                    ->latest()
-                    ->paginate(10);
-                break;
-        }
-
-        return view('livewire.archives', array_merge($data, [
-            'stats' => $stats,
-        ]));
+        return view('livewire.archives', [
+            'items'            => $items,
+            'kpis'             => $kpis,
+            'availablePeriods' => $availablePeriods,
+            'detailItem'       => $detailItem,
+        ]);
     }
 
-    public function setTab(string $tab): void
+    public function setModule(string $module): void
     {
-        $this->activeTab = $tab;
-        $this->search = '';
+        $this->activeModule = $module;
+        $this->detailId     = null;
+        $this->resetPage();
+
+        $periods = $this->getAvailablePeriods();
+        if ($periods->isNotEmpty()) {
+            $exists = $periods->contains(fn($p) => $p['month'] === $this->selectedMonth && $p['year'] === $this->selectedYear);
+            if (!$exists) {
+                $this->selectedMonth = $periods->first()['month'];
+                $this->selectedYear  = $periods->first()['year'];
+            }
+        }
+    }
+
+    public function setPeriod(int $month, int $year): void
+    {
+        $this->selectedMonth = $month;
+        $this->selectedYear  = $year;
+        $this->detailId      = null;
         $this->resetPage();
     }
 
-    public function updatingSearch(): void
+    public function openDetail(int $id): void
     {
-        $this->resetPage();
+        $this->detailId = ($this->detailId === $id) ? null : $id;
     }
 
-    public function restore(string $type, int $id): void
+    private function baseQuery()
     {
-        switch ($type) {
-            case 'mission':
-                $item = MissionOrder::findOrFail($id);
-                $item->update(['statut' => MissionOrder::STATUT_CLOTURE]);
-                break;
-            case 'carburant':
-                $item = FuelEntry::findOrFail($id);
-                $item->update(['statut' => FuelEntry::STATUT_VALIDE]);
-                break;
-            case 'intervention':
-                $item = Intervention::findOrFail($id);
-                $item->update(['statut' => Intervention::STATUT_TERMINE]);
-                break;
-            case 'assurance':
-                $item = Insurance::findOrFail($id);
-                $item->update(['statut' => Insurance::STATUT_EXPIREE]);
-                break;
-            case 'alerte':
-                $item = Alert::findOrFail($id);
-                $item->update(['statut' => Alert::STATUT_VUE]);
-                break;
-            case 'vignette':
-                $item = Vignette::findOrFail($id);
-                $item->update(['statut' => Vignette::STATUT_EXPIREE]);
-                break;
-        }
-
-        session()->flash('status', 'Élément restauré avec succès.');
+        return match ($this->activeModule) {
+            'carburant'     => FuelEntry::archive(),
+            'interventions' => Intervention::archive(),
+            'alertes'       => Alert::archive(),
+            default         => MissionOrder::archive(),
+        };
     }
 
-    public function deletePermanently(string $type, int $id): void
+    private function getAvailablePeriods(): \Illuminate\Support\Collection
     {
-        switch ($type) {
-            case 'mission':
-                MissionOrder::findOrFail($id)->delete();
-                break;
-            case 'carburant':
-                FuelEntry::findOrFail($id)->delete();
-                break;
-            case 'intervention':
-                Intervention::findOrFail($id)->delete();
-                break;
-            case 'assurance':
-                Insurance::findOrFail($id)->delete();
-                break;
-            case 'alerte':
-                Alert::findOrFail($id)->delete();
-                break;
-            case 'vignette':
-                Vignette::findOrFail($id)->delete();
-                break;
-        }
+        return $this->baseQuery()
+            ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year')
+            ->groupByRaw('YEAR(created_at), MONTH(created_at)')
+            ->orderByRaw('YEAR(created_at) DESC, MONTH(created_at) DESC')
+            ->get()
+            ->map(fn($r) => ['month' => (int)$r->month, 'year' => (int)$r->year]);
+    }
 
-        session()->flash('status', 'Élément supprimé définitivement.');
+    private function forPeriod(int $m, int $y)
+    {
+        return $this->baseQuery()->whereMonth('created_at', $m)->whereYear('created_at', $y);
+    }
+
+    private function getItems(int $m, int $y)
+    {
+        return match ($this->activeModule) {
+            'carburant' => FuelEntry::archive()
+                ->whereMonth('created_at', $m)->whereYear('created_at', $y)
+                ->with(['vehicle', 'driver', 'user'])
+                ->latest()->paginate(15),
+
+            'interventions' => Intervention::archive()
+                ->whereMonth('created_at', $m)->whereYear('created_at', $y)
+                ->with(['vehicle', 'user'])
+                ->latest('date_intervention')->paginate(15),
+
+            'alertes' => Alert::archive()
+                ->whereMonth('created_at', $m)->whereYear('created_at', $y)
+                ->with(['alertable', 'treatedBy'])
+                ->latest()->paginate(15),
+
+            default => MissionOrder::archive()
+                ->whereMonth('created_at', $m)->whereYear('created_at', $y)
+                ->with(['vehicle', 'driver', 'user', 'validator'])
+                ->latest()->paginate(15),
+        };
+    }
+
+    private function getKpis(int $m, int $y): array
+    {
+        return match ($this->activeModule) {
+            'carburant' => [
+                'nb_pleins'     => FuelEntry::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->count(),
+                'total_litres'  => (float) FuelEntry::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->sum('quantite_litres'),
+                'total_montant' => (float) FuelEntry::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->sum('montant_total'),
+            ],
+
+            'interventions' => [
+                'nb_total'   => Intervention::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->count(),
+                'total_cout' => (float) Intervention::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->sum('cout_total'),
+            ],
+
+            'alertes' => [
+                'nb_total'    => Alert::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->count(),
+                'nb_critique' => Alert::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->where('priorite', 'critique')->count(),
+                'nb_haute'    => Alert::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->where('priorite', 'haute')->count(),
+                'nb_traitees' => Alert::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->where('statut', 'traitee')->count(),
+            ],
+
+            default => [
+                'nb_total'     => MissionOrder::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->count(),
+                'km_parcourus' => (int) MissionOrder::archive()->whereMonth('created_at', $m)->whereYear('created_at', $y)->whereNotNull('km_retour')->whereNotNull('km_depart')->get()->sum(fn($o) => max(0, $o->km_retour - $o->km_depart)),
+            ],
+        };
+    }
+
+    private function loadDetail(int $id): mixed
+    {
+        return match ($this->activeModule) {
+            'carburant'     => FuelEntry::with(['vehicle', 'driver', 'user'])->find($id),
+            'interventions' => Intervention::with(['vehicle', 'user'])->find($id),
+            'alertes'       => Alert::with(['alertable', 'treatedBy'])->find($id),
+            default         => MissionOrder::with(['vehicle', 'driver', 'user', 'validator'])->find($id),
+        };
     }
 }

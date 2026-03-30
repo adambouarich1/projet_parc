@@ -44,8 +44,11 @@ return new class extends Migration
                 'valide',
                 'rejete',
                 'en_cours',
+                'depart_anticipe',
+                'termine_attente',
                 'cloture',
-                'annule'
+                'annule',
+                'archive',
             ])->default('brouillon')->index();
             
             // Commentaires
@@ -56,7 +59,8 @@ return new class extends Migration
             $table->timestamp('validated_at')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('closed_at')->nullable();
-            
+            $table->timestamp('archived_at')->nullable();
+
             $table->timestamps();
         });
     }

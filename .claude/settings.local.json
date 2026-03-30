@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(php artisan:*)",
-      "Bash(1:*)"
+      "Bash(1:*)",
+      "Bash(php -r \":*)",
+      "Bash(\"c:/Laravel/projet_parc/resources/views/livewire/archives.blade.php\")"
     ]
   }
 }

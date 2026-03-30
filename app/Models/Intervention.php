@@ -63,6 +63,7 @@ class Intervention extends Model
         'resultat_ct',
         'statut',
         'observations',
+        'archived_at',
     ];
 
     protected $casts = [
@@ -73,6 +74,7 @@ class Intervention extends Model
         'cout_pieces' => 'decimal:2',
         'cout_main_oeuvre' => 'decimal:2',
         'cout_total' => 'decimal:2',
+        'archived_at' => 'datetime',
     ];
 
     public function vehicle()

@@ -46,9 +46,9 @@ class Interventions extends Component
             ->paginate(15);
 
         $stats = [
-            'total_cout' => Intervention::where('statut', 'termine')->sum('cout_total'),
-            'nb_interventions' => Intervention::count(),
-            'planifiees' => Intervention::where('statut', 'planifie')->count(),
+            'total_cout'       => Intervention::nonArchive()->where('statut', 'termine')->sum('cout_total'),
+            'nb_interventions' => Intervention::nonArchive()->count(),
+            'planifiees'       => Intervention::nonArchive()->where('statut', 'planifie')->count(),
         ];
 
         return view('livewire.interventions', [
@@ -163,10 +163,33 @@ class Interventions extends Component
         }
 
         if ($this->editingId) {
-            Intervention::findOrFail($this->editingId)->update($data);
+            $intervention = Intervention::with('vehicle')->findOrFail($this->editingId);
+            $oldStatut    = $intervention->statut;
+            $oldVehicleId = $intervention->vehicle_id;
+            $intervention->update($data);
+
+            // Si le véhicule a changé et était en cours, libérer l'ancien
+            if ($oldVehicleId != $data['vehicle_id'] && $oldStatut === Intervention::STATUT_EN_COURS) {
+                Vehicle::find($oldVehicleId)?->update(['statut_actuel' => 'En service']);
+            }
+
+            $vehicle = Vehicle::find($data['vehicle_id']);
+            if ($vehicle) {
+                if ($data['statut'] === Intervention::STATUT_EN_COURS) {
+                    $vehicle->update(['statut_actuel' => 'En réparation']);
+                } elseif (in_array($data['statut'], [Intervention::STATUT_TERMINE, Intervention::STATUT_ANNULE])
+                          && $oldStatut === Intervention::STATUT_EN_COURS) {
+                    $vehicle->update(['statut_actuel' => 'En service']);
+                }
+            }
+
             session()->flash('status', 'Intervention mise à jour.');
         } else {
-            Intervention::create($data);
+            $intervention = Intervention::create($data);
+
+            if ($data['statut'] === Intervention::STATUT_EN_COURS) {
+                $intervention->vehicle?->update(['statut_actuel' => 'En réparation']);
+            }
 
             session()->flash('status', 'Intervention enregistrée.');
         }
@@ -183,9 +206,24 @@ class Interventions extends Component
 
     public function markAs(int $id, string $statut): void
     {
-        $intervention = Intervention::findOrFail($id);
-        $intervention->update(['statut' => $statut]);
-        session()->flash('status', 'Statut mis à jour.');
+        $intervention = Intervention::with('vehicle')->findOrFail($id);
+        $oldStatut = $intervention->statut;
+
+        $isTerminal = in_array($statut, [Intervention::STATUT_TERMINE, Intervention::STATUT_ANNULE]);
+        $archiveNow = $isTerminal && $intervention->created_at->startOfMonth()->lt(now()->startOfMonth());
+
+        $intervention->update([
+            'statut'      => $archiveNow ? Intervention::STATUT_ARCHIVE : $statut,
+            'archived_at' => $archiveNow ? now() : null,
+        ]);
+
+        if ($statut === Intervention::STATUT_EN_COURS) {
+            $intervention->vehicle?->update(['statut_actuel' => 'En réparation']);
+        } elseif ($isTerminal && $oldStatut === Intervention::STATUT_EN_COURS) {
+            $intervention->vehicle?->update(['statut_actuel' => 'En service']);
+        }
+
+        session()->flash('status', $archiveNow ? 'Intervention archivée.' : 'Statut mis à jour.');
     }
     public function archive(int $id): void
 {
